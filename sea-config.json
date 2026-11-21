@@ -1,0 +1,13 @@
+{
+  "main": "streambeats.js",
+  "output": "dist/StreamBeats - TwitchSongRequest.exe",
+  "disableExperimentalSEAWarning": true,
+  "useCodeCache": false,
+  "assets": {
+    "painel.html": "painel.html",
+    "overlay.html": "overlay.html",
+    "assets/streambeats.ico": "assets/streambeats.ico",
+    "assets/streambeats_256x256.png": "assets/streambeats_256x256.png",
+    "assets/streambeats_512x512.png": "assets/streambeats_512x512.png"
+  }
+}

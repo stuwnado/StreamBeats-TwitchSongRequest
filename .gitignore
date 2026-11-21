@@ -1,0 +1,10 @@
+# Arquivos pessoais de quem usa o app: NUNCA subir pro GitHub
+tokens.json
+config.json
+fila.json
+registro.log
+tocando_agora.txt
+
+# .exe gerado (vai nos Releases, não no código)
+dist/
+*.exe.copia

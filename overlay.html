@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>StreamBeats - Overlay</title>
+<style>
+  /* Overlay para o OBS (Fonte de Navegador). Fundo transparente.
+     Opções no link: ?fila=1 (mostra as próximas)  ?lado=direita  ?sempre=1 (não some quando nada toca) */
+  :root { --roxo: #9147ff; --verde: #1ed760; --rosa: #ff4fd8; }
+  html, body { margin: 0; background: transparent; overflow: hidden; font-family: "Segoe UI", system-ui, sans-serif; color: #fff;
+    user-select: none; -webkit-user-select: none; cursor: default; }
+  [hidden] { display: none !important; }
+  .palco { padding: 14px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+  .direita .palco { align-items: flex-end; }
+
+  .cartao {
+    position: relative; display: flex; gap: 14px; align-items: center;
+    width: 460px; max-width: calc(100vw - 28px); box-sizing: border-box;
+    padding: 12px 16px 12px 12px; border-radius: 18px;
+    background: rgba(14, 12, 24, .82);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, .45), 0 0 24px rgba(145, 71, 255, .35);
+    transition: opacity .5s, transform .5s;
+  }
+  .cartao::before {
+    content: ""; position: absolute; inset: 0; border-radius: 18px; padding: 2px;
+    background: linear-gradient(120deg, var(--roxo), var(--rosa), var(--verde));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+  }
+  .escondido { opacity: 0; transform: translateY(16px); }
+  .entrando { animation: entra .6s ease; }
+  @keyframes entra { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: none; } }
+  .direita .entrando { animation-name: entraDir; }
+  @keyframes entraDir { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: none; } }
+
+  .capa { width: 84px; height: 84px; border-radius: 12px; flex: none; background: #241b3a center/cover; box-shadow: 0 4px 14px rgba(0,0,0,.4); }
+  .info { flex: 1; min-width: 0; }
+  .rotulo { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #c9a8ff; display: flex; align-items: center; gap: 6px; }
+  .eq { display: inline-flex; gap: 2px; align-items: flex-end; height: 10px; }
+  .eq i { width: 3px; background: var(--verde); border-radius: 2px; animation: eq 1s infinite ease-in-out; }
+  .eq i:nth-child(2) { animation-delay: .2s; } .eq i:nth-child(3) { animation-delay: .4s; }
+  @keyframes eq { 0%, 100% { height: 3px; } 50% { height: 10px; } }
+  .pausado .eq i { animation: none; height: 3px; }
+  .nome { font-size: 20px; font-weight: 800; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;
+    color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.9), 0 2px 10px rgba(0,0,0,.7); }
+  .artista { font-size: 15px; color: #fff; opacity: .88; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 2px rgba(0,0,0,.9); }
+  .por { display: inline-block; margin-top: 6px; font-size: 13px; font-weight: 500; padding: 2px 10px; border-radius: 99px;
+    color: #f4edff; background: rgba(145, 71, 255, .32); border: 1px solid rgba(201, 168, 255, .55); max-width: 100%;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-sizing: border-box; }
+  .barra { height: 4px; border-radius: 9px; background: rgba(255,255,255,.15); margin-top: 8px; overflow: hidden; }
+  .barra div { height: 100%; width: 0; background: linear-gradient(90deg, var(--verde), #7dffb0); transition: width 1s linear; }
+
+  .fila { width: 460px; max-width: calc(100vw - 28px); box-sizing: border-box; padding: 10px 14px; border-radius: 14px; background: rgba(14, 12, 24, .75); font-size: 14px; }
+  .fila b { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #c9a8ff; }
+  .fila div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 4px; color: #e7e3f1; }
+  .fila span { color: #b48bff; }
+</style>
+</head>
+<body>
+<div class="palco">
+  <div class="cartao escondido" id="cartao">
+    <div class="capa" id="capa"></div>
+    <div class="info">
+      <div class="rotulo"><span class="eq"><i></i><i></i><i></i></span><span>Tocando agora</span></div>
+      <div class="nome" id="nome"></div>
+      <div class="artista" id="artista"></div>
+      <div class="por" id="por" hidden></div>
+      <div class="barra"><div id="barra"></div></div>
+    </div>
+  </div>
+  <div class="fila" id="fila" hidden></div>
+</div>
+<script>
+const opc = new URLSearchParams(location.search);
+if (opc.get('lado') === 'direita') document.body.classList.add('direita');
+const mostrarFila = opc.get('fila') === '1';
+const sempre = opc.get('sempre') === '1';
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let uriAtual = null;
+let est = null;
+
+async function atualizar() {
+  try {
+    est = await (await fetch('/overlay/estado', { cache: 'no-store' })).json();
+  } catch {
+    est = null;
+  }
+  const t = est && est.tocando;
+  const cartao = $('#cartao');
+  if (!t) {
+    if (!sempre) cartao.classList.add('escondido');
+    uriAtual = null;
+  } else {
+    if (t.uri !== uriAtual) {
+      uriAtual = t.uri;
+      $('#capa').style.backgroundImage = t.imagem ? `url("${t.imagem}")` : 'url("/icone.png")';
+      $('#nome').textContent = t.nome || t.titulo;
+      $('#artista').textContent = t.artistas || '';
+      $('#por').hidden = !t.pedidoPor;
+      $('#por').textContent = t.pedidoPor ? 'pedida por ' + t.pedidoPor : '';
+      cartao.classList.remove('escondido', 'entrando');
+      void cartao.offsetWidth; // reinicia a animação
+      cartao.classList.add('entrando');
+    }
+    cartao.classList.toggle('pausado', !(est.player && est.player.tocando));
+  }
+  const f = $('#fila');
+  const prox = (est && est.proximas) || [];
+  f.hidden = !mostrarFila || !prox.length || !t;
+  if (!f.hidden) {
+    f.innerHTML = '<b>A seguir</b>' + prox.map((p, i) =>
+      `<div>${i + 1}. ${esc(p.nome || p.titulo)}${p.artistas ? ' - ' + esc(p.artistas) : ''}${p.pedidoPor ? ` <span>(${esc(p.pedidoPor)})</span>` : ''}</div>`).join('');
+  }
+}
+
+function barra() {
+  const p = est && est.player;
+  if (!p || !p.duracao) { $('#barra').style.width = '0'; return; }
+  const agora = Math.min(p.duracao, p.progresso + (p.tocando ? Date.now() - p.quando : 0));
+  $('#barra').style.width = (agora / p.duracao * 100) + '%';
+}
+atualizar();
+setInterval(atualizar, 1500);
+setInterval(barra, 1000);
+</script>
+</body>
+</html>
