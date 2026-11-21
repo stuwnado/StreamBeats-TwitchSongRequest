@@ -28,7 +28,10 @@ if (-not (Test-Path $nodeExe)) {
 
 $nome = 'StreamBeats - TwitchSongRequest'
 $exe = Join-Path $PSScriptRoot "dist\$nome.exe"
-$versaoApp = ([regex]::Match((Get-Content (Join-Path $PSScriptRoot 'streambeats.js') -Raw), "const VERSAO = '([0-9.]+)'")).Groups[1].Value
+$codigoApp = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'streambeats.js'), (New-Object Text.UTF8Encoding $false))
+$ruim = [string][char]0xC3 + '[' + [char]0xA0 + '-' + [char]0xBF + ']|' + [char]0xE2 + [char]0x20AC
+if ($codigoApp -match $ruim) { throw 'Os acentos do streambeats.js parecem estragados. O .exe nao foi gerado.' }
+$versaoApp = ([regex]::Match($codigoApp, "const VERSAO = '([0-9.]+)'")).Groups[1].Value
 if (-not $versaoApp) { $versaoApp = '1.0.0' }
 
 function Test-Programa {

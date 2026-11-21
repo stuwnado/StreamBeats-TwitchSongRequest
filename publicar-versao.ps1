@@ -14,7 +14,8 @@ Set-Location $PSScriptRoot
 
 if ($Versao -notmatch '^\d+\.\d+\.\d+$') { throw 'A versao precisa ser no formato 1.2.3' }
 $arquivo = Join-Path $PSScriptRoot 'streambeats.js'
-$codigo = Get-Content $arquivo -Raw
+$utf8 = New-Object Text.UTF8Encoding $false
+$codigo = [IO.File]::ReadAllText($arquivo, $utf8) # sempre UTF-8, senao os acentos estragam
 $repo = ([regex]::Match($codigo, "const GITHUB_REPO = '([^']*)'")).Groups[1].Value
 if (-not $repo) { throw "Preencha o GITHUB_REPO no streambeats.js (ex.: 'seuusuario/StreamBeats-TwitchSongRequest')." }
 $gh = (Get-Command gh -ErrorAction SilentlyContinue).Source
@@ -23,7 +24,9 @@ if (-not $gh) { throw 'Instale o GitHub CLI (https://cli.github.com) e rode: gh 
 
 Write-Host "Mudando a versao do app para $Versao..."
 $codigo = [regex]::Replace($codigo, "const VERSAO = '[0-9.]+'", "const VERSAO = '$Versao'")
-[IO.File]::WriteAllText($arquivo, $codigo, (New-Object Text.UTF8Encoding $false))
+$ruim = [string][char]0xC3 + '[' + [char]0xA0 + '-' + [char]0xBF + ']|' + [char]0xE2 + [char]0x20AC
+if ($codigo -match $ruim) { throw 'Os acentos do streambeats.js parecem estragados. Nada foi publicado.' }
+[IO.File]::WriteAllText($arquivo, $codigo, $utf8)
 
 & (Join-Path $PSScriptRoot 'gerar-exe.ps1')
 
