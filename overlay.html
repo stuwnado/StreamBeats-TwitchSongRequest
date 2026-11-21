@@ -6,54 +6,58 @@
 <style>
   /* Overlay para o OBS (Fonte de Navegador). Fundo transparente.
      Opções no link: ?fila=1 (mostra as próximas)  ?lado=direita  ?sempre=1 (não some quando nada toca) */
-  :root { --roxo: #9147ff; --verde: #1ed760; --rosa: #ff4fd8; }
-  html, body { margin: 0; background: transparent; overflow: hidden; font-family: "Segoe UI", system-ui, sans-serif; color: #fff;
-    user-select: none; -webkit-user-select: none; cursor: default; }
+  :root { --roxo: #9147ff; --verde: #1ed760; --rosa: #ff4fd8; --ease-out: cubic-bezier(.23, 1, .32, 1); }
+  html, body { margin: 0; background: transparent; overflow: hidden; font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif; color: #fff;
+    user-select: none; -webkit-user-select: none; cursor: default; -webkit-font-smoothing: antialiased; }
   [hidden] { display: none !important; }
-  .palco { padding: 14px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+  .palco { padding: 16px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
   .direita .palco { align-items: flex-end; }
 
   .cartao {
     position: relative; display: flex; gap: 14px; align-items: center;
-    width: 460px; max-width: calc(100vw - 28px); box-sizing: border-box;
-    padding: 12px 16px 12px 12px; border-radius: 18px;
-    background: rgba(14, 12, 24, .82);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, .45), 0 0 24px rgba(145, 71, 255, .35);
-    transition: opacity .5s, transform .5s;
+    width: 460px; max-width: calc(100vw - 32px); box-sizing: border-box;
+    padding: 12px 18px 12px 12px; border-radius: 18px;
+    background: rgba(13, 11, 21, .86);
+    box-shadow: 0 16px 36px -14px rgba(0, 0, 0, .75);
+    transition: opacity 420ms var(--ease-out), transform 420ms var(--ease-out), filter 420ms var(--ease-out);
   }
   .cartao::before {
-    content: ""; position: absolute; inset: 0; border-radius: 18px; padding: 2px;
-    background: linear-gradient(120deg, var(--roxo), var(--rosa), var(--verde));
+    content: ""; position: absolute; inset: 0; border-radius: 18px; padding: 1.5px;
+    background: linear-gradient(120deg, var(--roxo), var(--rosa) 55%, var(--verde));
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
   }
-  .escondido { opacity: 0; transform: translateY(16px); }
-  .entrando { animation: entra .6s ease; }
-  @keyframes entra { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: none; } }
+  .escondido { opacity: 0; transform: translateY(14px); filter: blur(6px); }
+  /* o momento principal: a música nova entra deslizando e saindo do desfoque */
+  .entrando { animation: entra 620ms var(--ease-out); }
+  @keyframes entra { from { opacity: 0; transform: translateX(-22px); filter: blur(8px); } to { opacity: 1; transform: none; filter: none; } }
   .direita .entrando { animation-name: entraDir; }
-  @keyframes entraDir { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: none; } }
+  @keyframes entraDir { from { opacity: 0; transform: translateX(22px); filter: blur(8px); } to { opacity: 1; transform: none; filter: none; } }
 
-  .capa { width: 84px; height: 84px; border-radius: 12px; flex: none; background: #241b3a center/cover; box-shadow: 0 4px 14px rgba(0,0,0,.4); }
+  .capa { width: 84px; height: 84px; border-radius: 12px; flex: none; background: #241b3a center/cover; box-shadow: 0 8px 18px -8px rgba(0, 0, 0, .7); }
   .info { flex: 1; min-width: 0; }
-  .rotulo { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #c9a8ff; display: flex; align-items: center; gap: 6px; }
-  .eq { display: inline-flex; gap: 2px; align-items: flex-end; height: 10px; }
+  .titulo { display: flex; align-items: center; gap: 9px; min-width: 0; }
+  .eq { display: inline-flex; gap: 2px; align-items: flex-end; height: 12px; flex: none; }
   .eq i { width: 3px; background: var(--verde); border-radius: 2px; animation: eq 1s infinite ease-in-out; }
   .eq i:nth-child(2) { animation-delay: .2s; } .eq i:nth-child(3) { animation-delay: .4s; }
-  @keyframes eq { 0%, 100% { height: 3px; } 50% { height: 10px; } }
-  .pausado .eq i { animation: none; height: 3px; }
-  .nome { font-size: 20px; font-weight: 800; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;
-    color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.9), 0 2px 10px rgba(0,0,0,.7); }
-  .artista { font-size: 15px; color: #fff; opacity: .88; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 2px rgba(0,0,0,.9); }
-  .por { display: inline-block; margin-top: 6px; font-size: 13px; font-weight: 500; padding: 2px 10px; border-radius: 99px;
-    color: #f4edff; background: rgba(145, 71, 255, .32); border: 1px solid rgba(201, 168, 255, .55); max-width: 100%;
+  @keyframes eq { 0%, 100% { height: 3px; } 50% { height: 12px; } }
+  .pausado .eq i { animation: none; height: 3px; opacity: .6; }
+  .nome { font-size: 20px; font-weight: 700; letter-spacing: -.01em; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+    color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .9), 0 2px 10px rgba(0, 0, 0, .6); }
+  .artista { font-size: 15px; color: #fff; opacity: .86; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; text-shadow: 0 1px 2px rgba(0, 0, 0, .9); }
+  .por { display: inline-block; margin-top: 7px; font-size: 13px; font-weight: 500; padding: 1px 10px; border-radius: 99px;
+    color: #f4edff; background: rgba(145, 71, 255, .3); border: 1px solid rgba(201, 168, 255, .45); max-width: 100%;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-sizing: border-box; }
-  .barra { height: 4px; border-radius: 9px; background: rgba(255,255,255,.15); margin-top: 8px; overflow: hidden; }
-  .barra div { height: 100%; width: 0; background: linear-gradient(90deg, var(--verde), #7dffb0); transition: width 1s linear; }
+  .barra { height: 3px; border-radius: 9px; background: rgba(255, 255, 255, .14); margin-top: 9px; overflow: hidden; }
+  .barra div { height: 100%; width: 0; background: linear-gradient(90deg, var(--verde), #7dffb0); border-radius: 9px; transition: width 1s linear; }
 
-  .fila { width: 460px; max-width: calc(100vw - 28px); box-sizing: border-box; padding: 10px 14px; border-radius: 14px; background: rgba(14, 12, 24, .75); font-size: 14px; }
-  .fila b { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #c9a8ff; }
-  .fila div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 4px; color: #e7e3f1; }
-  .fila span { color: #b48bff; }
+  .fila { width: 460px; max-width: calc(100vw - 32px); box-sizing: border-box; padding: 10px 16px 11px; border-radius: 14px; background: rgba(13, 11, 21, .8); font-size: 14px;
+    box-shadow: 0 12px 28px -14px rgba(0, 0, 0, .7); }
+  .fila b { font-size: 12.5px; font-weight: 600; color: #cdb2ff; }
+  .fila div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 4px; color: #ece8f6; }
+  .fila span { color: #b993ff; }
+
+  @media (prefers-reduced-motion: reduce) { .entrando { animation: none; } .eq i { animation: none; height: 6px; } }
 </style>
 </head>
 <body>
@@ -61,8 +65,7 @@
   <div class="cartao escondido" id="cartao">
     <div class="capa" id="capa"></div>
     <div class="info">
-      <div class="rotulo"><span class="eq"><i></i><i></i><i></i></span><span>Tocando agora</span></div>
-      <div class="nome" id="nome"></div>
+      <div class="titulo"><span class="eq" title="tocando agora"><i></i><i></i><i></i></span><div class="nome" id="nome"></div></div>
       <div class="artista" id="artista"></div>
       <div class="por" id="por" hidden></div>
       <div class="barra"><div id="barra"></div></div>

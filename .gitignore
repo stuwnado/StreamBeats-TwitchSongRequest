@@ -8,3 +8,6 @@ tocando_agora.txt
 # .exe gerado (vai nos Releases, não no código)
 dist/
 *.exe.copia
+
+# arquivos de trabalho da skill de design (capturas temporarias)
+.impeccable/

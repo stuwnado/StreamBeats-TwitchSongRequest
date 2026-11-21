@@ -1,5 +1,16 @@
 # Histórico de versões
 
+## v1.0.2 (2026-11-21)
+
+Visual repaginado: mais refinado e minimalista, com as mesmas cores.
+
+- Fila em linhas limpas, sem caixa dentro de caixa, e conteúdo centralizado em tela grande.
+- Logo em texto sólido, títulos sem caixa alta, bordas mais finas e avisos em cores translúcidas.
+- Seleção de texto, barra de rolagem, cursor e foco do teclado no tema do app.
+- Animações curtas e com propósito: botões que afundam ao clicar, interruptor e abas que deslizam, capa que troca suave quando muda a música. Tudo desliga com a opção de menos movimento do Windows.
+- Overlay do OBS: a música nova entra deslizando e saindo do desfoque, e o equalizador fica ao lado do nome.
+- Contraste do texto ajustado pro padrão de acessibilidade.
+
 ## v1.0.1 (2026-11-21)
 
 Painel mais compacto.
