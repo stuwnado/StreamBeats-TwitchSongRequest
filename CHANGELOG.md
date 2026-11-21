@@ -1,5 +1,15 @@
 # Histórico de versões
 
+## v1.0.1 (2026-11-21)
+
+Painel mais compacto.
+
+- Topo numa linha só: Spotify e chat viram bolinhas de status, e o texto aparece ao passar o mouse.
+- As abas ficam presas no topo quando você rola a tela.
+- Moderação e Configurar voltam a mostrar tudo aberto. Só o quadro de Sincronização continua minimizável.
+- A janela do painel abre no tamanho 640 × 820.
+- Os scripts de build sempre leem o código em UTF-8, pra não estragar os acentos.
+
 ## v1.0.0 (2026-11-21)
 
 Primeira versão pública.

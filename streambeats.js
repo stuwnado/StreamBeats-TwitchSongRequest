@@ -23,7 +23,7 @@ let sea = null;
 try { sea = require('node:sea'); } catch { /* Node antigo */ }
 const EH_EXE = !!(sea && sea.isSea && sea.isSea());
 
-const VERSAO = '1.0.0';
+const VERSAO = '1.0.1';
 // Repositório do GitHub de onde o app baixa atualizações ("usuario/repositorio").
 // Vazio = atualização automática desligada.
 const GITHUB_REPO = 'stuwnado/StreamBeats-TwitchSongRequest';
@@ -191,7 +191,7 @@ function abrirPainel() {
     ].find((p) => fs.existsSync(p));
     if (edge) {
       // modo "app": abre como uma janela de programa, sem barra de endereço
-      spawn(edge, ['--app=' + URL_PAINEL, '--window-size=1000,820'], { detached: true, stdio: 'ignore' }).unref();
+      spawn(edge, ['--app=' + URL_PAINEL, '--window-size=640,820'], { detached: true, stdio: 'ignore' }).unref();
       return;
     }
   }

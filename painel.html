@@ -33,25 +33,38 @@
   .ic.p svg { width: 14px; height: 14px; }
   .ic.g svg { width: 22px; height: 22px; }
 
+  .topo { position: sticky; top: 0; z-index: 5; background: #121219; border-bottom: 1px solid var(--borda); }
   header {
     display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-    padding: 10px 16px; border-bottom: 1px solid var(--borda); background: #121219;
-    position: sticky; top: 0; z-index: 5;
+    padding: 10px 16px 6px; position: relative;
   }
   .logo { font-weight: 700; font-size: 17px; display: flex; align-items: center; gap: 8px; margin-right: 4px; }
   .logo img { display: block; filter: drop-shadow(0 0 10px rgba(145, 71, 255, .45)); }
   .logo span { background: linear-gradient(90deg, var(--roxo), var(--verde)); -webkit-background-clip: text; background-clip: text; color: transparent; }
   .logo small { font-size: 11px; font-weight: 600; color: var(--suave); letter-spacing: .03em; }
-  .pilula { display: inline-flex; align-items: center; gap: 7px; padding: 4px 10px; border-radius: 99px; background: var(--painel2); border: 1px solid var(--borda); font-size: 12px; color: var(--suave); max-width: 260px; }
-  .pilula span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .pilula i { width: 8px; height: 8px; border-radius: 50%; background: var(--vermelho); display: inline-block; flex: none; }
+  /* status: só a bolinha; o texto aparece ao passar o mouse */
+  .pilula { position: relative; display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; cursor: help; }
+  .pilula:hover { background: var(--painel2); }
+  .pilula span { display: none; }
+  .pilula::after { content: attr(data-dica); position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%); white-space: nowrap;
+    background: var(--painel2); border: 1px solid var(--borda); color: var(--texto); font-size: 12px; padding: 5px 9px; border-radius: 8px;
+    opacity: 0; pointer-events: none; transition: opacity .15s; z-index: 10; }
+  .pilula:hover::after { opacity: 1; }
+  .pilula i { width: 10px; height: 10px; border-radius: 50%; background: var(--vermelho); display: inline-block; flex: none; }
   .pilula.ok i { background: var(--verde); box-shadow: 0 0 8px var(--verde); }
   .pilula.meio i { background: var(--amarelo); }
   .espaco { flex: 1; }
-  .salvo { font-size: 12px; color: var(--verde); display: inline-flex; align-items: center; gap: 4px; opacity: 0; transition: opacity .3s; }
+  .salvo { position: absolute; right: 16px; top: calc(100% + 54px); z-index: 6; font-size: 12px; color: var(--verde); display: inline-flex; align-items: center; gap: 4px;
+    background: #0f2419; border: 1px solid #24563a; padding: 3px 9px; border-radius: 99px; opacity: 0; transition: opacity .3s; pointer-events: none; }
   .salvo.mostrar { opacity: 1; }
 
-  nav { display: flex; gap: 2px; padding: 8px 16px 0; overflow-x: auto; }
+  nav { display: flex; gap: 2px; padding: 2px 16px 0; overflow-x: auto; }
+  @media (max-width: 700px) { .logo small { display: none; } }
+  /* blocos sempre abertos (Moderação e Configurar) */
+  .bloco { background: var(--painel); border: 1px solid var(--borda); border-radius: 12px; padding: 12px 14px 4px; }
+  .bloco-titulo { display: flex; align-items: center; gap: 10px; font-weight: 600; margin-bottom: 10px; }
+  .bloco-titulo .desc { color: var(--suave); font-weight: 400; font-size: 12px; margin-left: auto; text-align: right; }
+  .bloco > .corpo { padding: 0 0 10px; }
   nav button { background: none; border: none; padding: 8px 14px; color: var(--suave); cursor: pointer; font-weight: 600; border-bottom: 2px solid transparent; white-space: nowrap; display: inline-flex; align-items: center; gap: 7px; }
   nav button.ativo { color: var(--texto); border-bottom-color: var(--roxo); }
   nav .bolinha { display: inline-block; min-width: 18px; padding: 0 5px; border-radius: 99px; background: var(--amarelo); color: #1a1400; font-size: 11px; text-align: center; }
@@ -141,7 +154,7 @@
   .check small { display: block; color: var(--suave); font-size: 12px; }
 
   /* sanfonas */
-  .sanfonas { display: flex; flex-direction: column; gap: 8px; }
+  .sanfonas { display: flex; flex-direction: column; gap: 12px; }
   details.sanfona { background: var(--painel); border: 1px solid var(--borda); border-radius: 12px; }
   details.sanfona > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 11px 14px; font-weight: 600; user-select: none; }
   details.sanfona > summary::-webkit-details-marker { display: none; }
@@ -219,10 +232,11 @@
 </style>
 </head>
 <body>
+<div class="topo">
 <header>
   <div class="logo"><img src="/icone.png" alt="" width="34" height="34"><span>StreamBeats</span><small>Twitch Song Request</small></div>
-  <div class="pilula" id="pSpotify"><i></i><span>Spotify</span></div>
-  <div class="pilula" id="pChat"><i></i><span>Chat</span></div>
+  <div class="pilula" id="pSpotify" data-dica="Spotify"><i></i><span>Spotify</span></div>
+  <div class="pilula" id="pChat" data-dica="Chat"><i></i><span>Chat</span></div>
   <span class="salvo" id="salvoInd"><i class="ic p" data-ic="check"></i>salvo</span>
   <div class="espaco"></div>
   <button class="botao pequeno verde" id="btAtualizacao" hidden><i class="ic p" data-ic="download"></i><span></span></button>
@@ -238,6 +252,7 @@
   <button data-aba="config"><i class="ic" data-ic="sliders"></i>Configurar<span class="bolinha" id="bolSync" hidden>!</span></button>
   <button data-aba="ajuda"><i class="ic" data-ic="help"></i>Ajuda</button>
 </nav>
+</div>
 
 <main>
   <!-- ======================= PLAYER & FILA ======================= -->
@@ -295,17 +310,17 @@
   <!-- ======================= MODERAÇÃO ======================= -->
   <section class="aba" id="aba-moderacao">
     <div class="sanfonas">
-      <details class="sanfona" name="mod" open>
-        <summary><i class="ic" data-ic="usuarios"></i>Quem pode pedir<span class="desc">subs, aprovação, explícitas</span><i class="ic seta" data-ic="seta"></i></summary>
+      <section class="bloco">
+        <div class="bloco-titulo"><i class="ic" data-ic="usuarios"></i>Quem pode pedir<span class="desc">subs, aprovação, explícitas</span></div>
         <div class="corpo">
           <label class="check"><input type="checkbox" name="somente_subs_e_vips"><span>Só subs, VIPs e mods<small>Os outros recebem um aviso no chat.</small></span></label>
           <label class="check"><input type="checkbox" name="aprovar_pedidos"><span>Aprovar pedidos antes de tocar<small>Os pedidos esperam você aprovar na aba Player &amp; Fila. Pedidos de mods e de pontos do canal entram direto.</small></span></label>
           <label class="check"><input type="checkbox" name="bloquear_explicitas"><span>Bloquear músicas explícitas</span></label>
         </div>
-      </details>
+      </section>
 
-      <details class="sanfona" name="mod">
-        <summary><i class="ic" data-ic="relogio"></i>Limites<span class="desc" id="descLimites"></span><i class="ic seta" data-ic="seta"></i></summary>
+      <section class="bloco">
+        <div class="bloco-titulo"><i class="ic" data-ic="relogio"></i>Limites<span class="desc" id="descLimites"></span></div>
         <div class="corpo">
           <div class="campos2">
             <label class="campo"><span>Espera entre pedidos (s)</span><input type="number" name="cooldown_segundos" min="0"><small>Mods não esperam.</small></label>
@@ -316,10 +331,10 @@
             <label class="campo"><span>Votos para pular</span><input type="number" name="votos_para_pular" min="0"><small>!voteskip · 0 = desligado</small></label>
           </div>
         </div>
-      </details>
+      </section>
 
-      <details class="sanfona" name="mod">
-        <summary><i class="ic" data-ic="volume"></i>Volume, earrape e furar fila<span class="desc">comandos do chat</span><i class="ic seta" data-ic="seta"></i></summary>
+      <section class="bloco">
+        <div class="bloco-titulo"><i class="ic" data-ic="volume"></i>Volume, earrape e furar fila<span class="desc">comandos do chat</span></div>
         <div class="corpo">
           <div class="campos2">
             <label class="campo"><span>Quem muda o volume</span>
@@ -334,30 +349,30 @@
             <label class="campo"><span>Espera pra furar fila (min)</span><input type="number" name="furarfila_espera_minutos" min="0"><small>Por pessoa. Mods não esperam.</small></label>
           </div>
         </div>
-      </details>
+      </section>
 
-      <details class="sanfona" name="mod">
-        <summary><i class="ic" data-ic="bandeira"></i>Bandeira vermelha<span class="desc">avisa, mas deixa entrar</span><i class="ic seta" data-ic="seta"></i></summary>
+      <section class="bloco">
+        <div class="bloco-titulo"><i class="ic" data-ic="bandeira"></i>Bandeira vermelha<span class="desc">avisa, mas deixa entrar</span></div>
         <div class="corpo">
           <p class="dica" style="margin-top:0">A música <b>entra na fila</b>, mas aparece marcada pra você decidir. Passe o mouse na bandeira pra ver o motivo.</p>
           <label class="campo"><span>Termos que acendem a bandeira</span><textarea name="palavras_alerta" placeholder="Um por linha" style="min-height:100px"></textarea></label>
         </div>
-      </details>
+      </section>
 
-      <details class="sanfona" name="mod">
-        <summary><i class="ic" data-ic="ban"></i>Bloqueios<span class="desc">nem entram na fila</span><i class="ic seta" data-ic="seta"></i></summary>
+      <section class="bloco">
+        <div class="bloco-titulo"><i class="ic" data-ic="ban"></i>Bloqueios<span class="desc">nem entram na fila</span></div>
         <div class="corpo">
           <div class="campos2" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">
             <label class="campo"><span>Músicas / artistas com estes termos</span><textarea name="palavras_bloqueadas" placeholder="Um por linha"></textarea></label>
             <label class="campo"><span>Usuários bloqueados</span><textarea name="usuarios_bloqueados" placeholder="Um por linha"></textarea></label>
           </div>
         </div>
-      </details>
+      </section>
 
-      <details class="sanfona" name="mod">
-        <summary><i class="ic" data-ic="ban"></i>Músicas banidas<span class="desc" id="qtdBan"></span><i class="ic seta" data-ic="seta"></i></summary>
+      <section class="bloco">
+        <div class="bloco-titulo"><i class="ic" data-ic="ban"></i>Músicas banidas<span class="desc" id="qtdBan"></span></div>
         <div class="corpo"><ul class="fila" id="banidas"></ul></div>
-      </details>
+      </section>
     </div>
   </section>
 
@@ -437,8 +452,8 @@
     </details>
 
     <div class="sanfonas">
-      <details class="sanfona" name="cfg" id="secOverlay">
-        <summary><i class="ic" data-ic="monitor"></i>Overlay no OBS<span class="desc">a música aparecendo na live</span><i class="ic seta" data-ic="seta"></i></summary>
+      <section class="bloco" id="secOverlay">
+        <div class="bloco-titulo"><i class="ic" data-ic="monitor"></i>Overlay no OBS<span class="desc">a música aparecendo na live</span></div>
         <div class="corpo" id="overlayCorpo">
           <p class="dica" style="margin-top:0">No OBS: <b>Fontes → + → Navegador</b>, cole o link e use o tamanho indicado.</p>
           <div class="opcoes-overlay">
@@ -457,10 +472,10 @@
           </div>
           <label class="check"><input type="checkbox" id="overlayDireita"><span>Alinhar à direita<small>Muda os dois links. Copie de novo depois de marcar.</small></span></label>
         </div>
-      </details>
+      </section>
 
-      <details class="sanfona" name="cfg" id="secPontos">
-        <summary><i class="ic" data-ic="presente"></i>Pontos do canal<span class="desc" id="descPontos">pedido, furar fila e earrape</span><i class="ic seta" data-ic="seta"></i></summary>
+      <section class="bloco" id="secPontos">
+        <div class="bloco-titulo"><i class="ic" data-ic="presente"></i>Pontos do canal<span class="desc" id="descPontos">pedido, furar fila e earrape</span></div>
         <div class="corpo">
           <div id="pontosApi"></div>
           <details class="passos-box" id="pontosManual">
@@ -474,10 +489,10 @@
             <div id="pontosManualLista"></div>
           </details>
         </div>
-      </details>
+      </section>
 
-      <details class="sanfona" name="cfg">
-        <summary><i class="ic" data-ic="disco"></i>Histórico da live<span class="desc" id="descHist"></span><i class="ic seta" data-ic="seta"></i></summary>
+      <section class="bloco">
+        <div class="bloco-titulo"><i class="ic" data-ic="disco"></i>Histórico da live<span class="desc" id="descHist"></span></div>
         <div class="corpo">
           <div class="estado-con" id="histEstado">Nenhuma música ainda.</div>
           <div class="linha">
@@ -486,10 +501,10 @@
           </div>
           <small class="dica" id="histDica"></small>
         </div>
-      </details>
+      </section>
 
-      <details class="sanfona" name="cfg">
-        <summary><i class="ic" data-ic="chat"></i>Nomes dos comandos<span class="desc">!sr, !song, !fila...</span><i class="ic seta" data-ic="seta"></i></summary>
+      <section class="bloco">
+        <div class="bloco-titulo"><i class="ic" data-ic="chat"></i>Nomes dos comandos<span class="desc">!sr, !song, !fila...</span></div>
         <div class="corpo">
           <p class="dica" style="margin-top:0">Separe por vírgula. Ex.: <code>!sr, !música</code></p>
           <div class="campos2">
@@ -508,12 +523,12 @@
             <label class="campo"><span>Fechar pedidos (mods)</span><input type="text" data-cmd="fechar"></label>
           </div>
         </div>
-      </details>
+      </section>
 
-      <details class="sanfona" name="cfg" id="secAtualizacoes">
-        <summary><i class="ic" data-ic="download"></i>Atualizações<span class="desc" id="descVersao"></span><i class="ic seta" data-ic="seta"></i></summary>
+      <section class="bloco" id="secAtualizacoes">
+        <div class="bloco-titulo"><i class="ic" data-ic="download"></i>Atualizações<span class="desc" id="descVersao"></span></div>
         <div class="corpo" id="atualizacoesCorpo"></div>
-      </details>
+      </section>
     </div>
   </section>
 
@@ -944,11 +959,13 @@ function desenhar() {
   const sp = $('#pSpotify');
   sp.className = 'pilula ' + (conectado ? (e.spotify.aparelho ? 'ok' : 'meio') : '');
   sp.querySelector('span').textContent = conectado ? 'Spotify: ' + (e.spotify.aparelho || 'sem aparelho tocando') : 'Spotify desconectado';
+  sp.dataset.dica = sp.querySelector('span').textContent;
   const ch = $('#pChat');
   ch.className = 'pilula ' + (e.chat.conectado ? 'ok' : e.chat.canal ? 'meio' : '');
   ch.querySelector('span').textContent = e.chat.canal
     ? (e.chat.conectado ? '#' + e.chat.canal + (e.chat.respondendoComo ? ' · respondendo' : '') : 'Conectando a #' + e.chat.canal + '...')
     : 'Sem canal';
+  ch.dataset.dica = ch.querySelector('span').textContent;
   $('#abertos').checked = e.pedidosAbertos;
   $('#abertosTxt').textContent = e.pedidosAbertos ? 'Pedidos abertos' : 'Pedidos fechados';
 

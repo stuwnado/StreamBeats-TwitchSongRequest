@@ -22,3 +22,7 @@ Mudanças pedidas durante os testes. Lote 1 (itens 1 a 18) feito em 21/11/2026. 
 | 16 | ~~Pular pelo próprio Spotify vai pro próximo pedido.~~ **Cancelado:** fica como está, pra o streamer ter liberdade de pôr as próprias músicas pelo app do Spotify. | ❌ cancelado |
 | 17 | **"Pedida por" mais legível**, no overlay e no painel: sem negrito, sem o emoji, com cor e fundo que dão pra ler bem (hoje é branco em negrito sobre rosa). | ✅ feito |
 | 18 | **Ícones de verdade no lugar dos emojis** em todo o painel e overlay (play, pausa, pular, voltar, banir, tirar da fila, topo, volume, abas etc.), todos no mesmo estilo. Usar o conjunto **Lucide** (gratuito, licença ISC, pode usar no GitHub), embutido no app (funciona sem internet), com o aviso de licença no projeto. | ✅ feito |
+| 19 | **Desfazer as sanfonas.** Não gostou do formato de minimizar, nem de abrir uma e as outras fecharem sozinhas. A aba Moderação volta a mostrar tudo aberto, em cartões. Na aba Configurar também volta tudo aberto; só o quadro Sincronização continua minimizável. | ✅ feito (v1.0.1) |
+| 20 | **Tamanho padrão da janela** igual ao do print (estreita e alta, uns 640 × 820). | ✅ feito (v1.0.1) |
+| 21 | **Topo numa linha só.** Spotify e chat viram só a bolinha (amarela/verde/vermelha), e o texto aparece só ao passar o mouse em cima. Assim o "Pedidos abertos" e o "Desligar" cabem na mesma linha do logo. | ✅ feito (v1.0.1) |
+| 22 | **Abas fixas no topo.** "Player & Fila / Moderação / Configurar / Ajuda" ficam presas em cima ao rolar a tela, junto com o topo. | ✅ feito (v1.0.1) |
