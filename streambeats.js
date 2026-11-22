@@ -23,7 +23,7 @@ let sea = null;
 try { sea = require('node:sea'); } catch { /* Node antigo */ }
 const EH_EXE = !!(sea && sea.isSea && sea.isSea());
 
-const VERSAO = '1.1.1';
+const VERSAO = '1.1.2';
 // Repositório do GitHub de onde o app baixa atualizações ("usuario/repositorio").
 // Vazio = atualização automática desligada.
 const GITHUB_REPO = 'stuwnado/StreamBeats-TwitchSongRequest';
@@ -66,12 +66,15 @@ const COMANDOS_DECK = {
   earrape: ['Earrape', 'volume'],
 };
 const ENVIAR_QUANDO_FALTAR_MS = 15000; // manda o próximo pedido pro Spotify 15s antes da música acabar
-// De quanto em quanto tempo o app pergunta ao Spotify o que está tocando. Desde julho de 2026 o Spotify
-// limita bem mais os apps em modo de desenvolvimento, então o app só pergunta rápido quando precisa.
-const INTERVALO_TOCANDO_MS = 5000; // música tocando
-const INTERVALO_PAUSADO_MS = 10000; // pausado ou sem aparelho ativo
-const INTERVALO_TOCANDO_OFFLINE_MS = 15000; // tocando com a live fora do ar
-const INTERVALO_PAUSADO_OFFLINE_MS = 60000; // pausado com a live fora do ar
+// Modo econômico: o Spotify não avisa quando a música troca, então o app pergunta, mas o mínimo possível.
+// Desde julho de 2026 o Spotify limita bem mais os apps em modo de desenvolvimento. Com a música tocando,
+// o app já sabe quanto falta: pergunta na hora de mandar o próximo pedido, logo depois que a música acaba,
+// e no meio dela só uma conferência de vez em quando (pra quem pausa ou pula pelo próprio Spotify).
+// Comandos do painel, do chat e do Stream Deck conferem logo depois, sem esperar.
+const INTERVALO_TOCANDO_MS = 20000; // conferência no meio da música
+const INTERVALO_PAUSADO_MS = 20000; // pausado ou sem aparelho ativo
+const INTERVALO_TOCANDO_OFFLINE_MS = 60000; // tocando com a live fora do ar
+const INTERVALO_PAUSADO_OFFLINE_MS = 120000; // pausado com a live fora do ar
 const ESPERAS_BLOQUEIO_SEG = [60, 120, 300, 600, 900]; // bloqueio sem prazo do Spotify: espera cada vez mais
 const TIPOS_RECOMPENSA = ['pedido', 'prioridade', 'earrape'];
 const NOMES_RECOMPENSA = { pedido: 'Pedir música', prioridade: 'Furar fila', earrape: 'Earrape' };
@@ -152,6 +155,7 @@ let aprendendoRecompensa = null; // 'pedido' | 'prioridade' | 'earrape'
 let pausaSpotifyAte = 0;
 let bloqueiosSeguidos = 0; // quantas vezes seguidas o Spotify pediu pra ir mais devagar
 let avisarQuandoVoltar = false;
+let ultimaTentativaEnvio = 0;
 let earrapeAte = 0;
 let volumeAntesEarrape = null;
 let ultimoEarrapeChat = 0;
@@ -444,6 +448,7 @@ async function aplicarConfig(novo) {
 
 // ---------------------------------------------------------------- fila salva no disco
 function salvarFila() {
+  adiantarPlayer();
   try {
     gravarSeguro(ARQ_FILA, JSON.stringify({ pedidos, pendentes, historico, livesAnteriores }, null, 2));
   } catch (e) {
@@ -816,6 +821,7 @@ async function alimentarSpotify(agora) {
       const resta = pl.duracao - (pl.progresso + (Date.now() - pl.quando));
       if (resta > ENVIAR_QUANDO_FALTAR_MS) return;
     }
+    ultimaTentativaEnvio = Date.now(); // se falhar, não fica tentando de segundo em segundo
     await spotify('POST', '/me/player/queue', { params: { uri: prox.uri } });
     prox.enviado = true;
     prox.enviadoEm = Date.now();
@@ -840,7 +846,7 @@ async function pular() {
   // se tem pedido esperando, manda ele antes de pular, pra ele tocar na hora
   if (!pedidos.some((p) => p.enviado) && pedidos.length) await alimentarSpotify(true);
   await spotify('POST', '/me/player/next');
-  setTimeout(atualizarPlayer, 700);
+  conferirPlayerEm(700);
 }
 
 async function tocarAgora(id) {
@@ -1006,19 +1012,46 @@ function proximaConsultaMs() {
   const pl = estado.player;
   if (!pl || !pl.tocando) return offline ? INTERVALO_PAUSADO_OFFLINE_MS : INTERVALO_PAUSADO_MS;
   let ms = offline ? INTERVALO_TOCANDO_OFFLINE_MS : INTERVALO_TOCANDO_MS;
+  if (!(pl.duracao > 0)) return ms; // sem duração (ex.: alguns podcasts): só a conferência de vez em quando
   const resta = pl.duracao - (pl.progresso + (Date.now() - pl.quando));
+  if (resta <= 0) {
+    // já devia ter acabado: o Spotify às vezes demora um pouco pra trocar (no máximo 5 conferências rápidas)
+    consultasNoFim++;
+    return consultasNoFim <= 5 ? 2000 : ms;
+  }
+  consultasNoFim = 0;
   const temPraMandar = pedidos.length > 0 && !pedidos.some((p) => p.enviado);
   if (temPraMandar && resta > ENVIAR_QUANDO_FALTAR_MS) ms = Math.min(ms, resta - ENVIAR_QUANDO_FALTAR_MS + 300);
-  if (resta > 0) ms = Math.min(ms, resta + 800);
+  else if (temPraMandar && Date.now() - ultimaTentativaEnvio > 10000) ms = 1000; // já está na hora de mandar
+  ms = Math.min(ms, resta + 800);
   return Math.max(1000, ms);
 }
+let consultasNoFim = 0;
 
 let timerPlayer = null;
+let proximaConsultaEm = 0;
+let cicloLigado = false; // só no app de verdade (nos testes, cada conferência é chamada na mão)
+function agendarPlayer(ms) {
+  clearTimeout(timerPlayer);
+  proximaConsultaEm = Date.now() + ms;
+  timerPlayer = setTimeout(cicloDoPlayer, ms);
+}
 async function cicloDoPlayer() {
+  cicloLigado = true;
   try { await atualizarPlayer(); } catch { /* o próximo ciclo tenta de novo */ }
   const espera = pausaSpotifyAte - Date.now();
-  clearTimeout(timerPlayer);
-  timerPlayer = setTimeout(cicloDoPlayer, espera > 0 ? espera + 500 : proximaConsultaMs());
+  agendarPlayer(espera > 0 ? espera + 500 : proximaConsultaMs());
+}
+// Confere daqui a pouco (depois de um comando) e segue o ciclo a partir dali.
+function conferirPlayerEm(ms) {
+  if (!cicloLigado) { setTimeout(atualizarPlayer, ms); return; }
+  agendarPlayer(ms);
+}
+// A fila ou a live mudou: se a próxima conferência precisar ser antes, adianta (nunca atrasa).
+function adiantarPlayer() {
+  if (!cicloLigado || Date.now() < pausaSpotifyAte) return;
+  const ms = proximaConsultaMs();
+  if (Date.now() + ms < proximaConsultaEm - 200) agendarPlayer(ms);
 }
 
 // ---------------------------------------------------------------- Twitch: login (opcional)
@@ -1569,6 +1602,7 @@ async function verificarAoVivo() {
     estado.aoVivo = !!(d && Array.isArray(d.data) && d.data.some((s) => s.type === 'live'));
     // a live acabou de começar (ou o app abriu com ela no ar): se for uma live nova, o histórico recomeça
     if (estado.aoVivo && estava !== true) comecarHistoricoDeLiveNova();
+    if (estado.aoVivo !== estava) adiantarPlayer();
   } catch {
     // sem internet ou a Twitch não respondeu: fica como estava e tenta de novo daqui a pouco
   }
@@ -2082,11 +2116,11 @@ async function acaoDoPainel(a) {
   switch (a.tipo) {
     case 'tocar-pausar':
       await spotify('PUT', estado.player && estado.player.tocando ? '/me/player/pause' : '/me/player/play');
-      setTimeout(atualizarPlayer, 600);
+      conferirPlayerEm(600);
       return null;
     case 'voltar':
       await spotify('POST', '/me/player/previous');
-      setTimeout(atualizarPlayer, 700);
+      conferirPlayerEm(700);
       return null;
     case 'volume':
       if (Date.now() < earrapeAte) return 'Espera o earrape acabar.';
@@ -2550,7 +2584,8 @@ module.exports = {
     get livesAnteriores() { return livesAnteriores; }, definirLivesAnteriores: (l) => { livesAnteriores = l; },
     separarSeFoiOutraLive, criarPlaylist, separarEmLives,
     // menos consultas ao Spotify e espera depois do bloqueio
-    proximaConsultaMs, chamarSpotify: (...a) => spotify(...a),
+    proximaConsultaMs, chamarSpotify: (...a) => spotify(...a), adiantarPlayer, conferirPlayerEm,
+    ligarCicloParaTeste: () => { cicloLigado = true; }, get proximaConsultaEm() { return proximaConsultaEm; },
     get pausaSpotifyAte() { return pausaSpotifyAte; }, definirPausaSpotify: (t, zerar = true) => { pausaSpotifyAte = t; if (zerar) bloqueiosSeguidos = 0; },
   },
 };

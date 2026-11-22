@@ -2,6 +2,13 @@
 
 O que mudou em cada versão, em poucas palavras.
 
+## v1.1.2 (2026-11-22)
+
+Modo econômico: o app fala bem menos com o Spotify.
+
+- Com a música tocando, o app pergunta ao Spotify só na hora de mandar o próximo pedido, quando a música acaba e numa conferência a cada 20 segundos. Pausado, a cada 20 segundos. Com a live fora do ar, bem menos.
+- Comandos pelo painel, chat e Stream Deck continuam aparecendo na hora. Se você pausar ou pular pelo próprio Spotify, o painel e o overlay podem levar até uns 20 segundos pra perceber.
+
 ## v1.1.1 (2026-11-22)
 
 Correção do erro "O Spotify pediu para ir mais devagar".

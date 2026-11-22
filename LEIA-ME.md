@@ -104,7 +104,7 @@ Só existem em canal **Afiliado ou Parceiro** da Twitch (é a Twitch que libera)
 2. No OBS: **Fontes → + → Navegador**, cole o link e use o tamanho indicado do lado.
 
 A caixinha **Alinhar à direita** muda os dois links.
-Com a opção **Esconder o overlay quando a música estiver pausada** (ligada no começo), o overlay sai da tela uns segundos depois de pausar e volta sozinho quando der play (pelo painel, chat ou Stream Deck é na hora; pelo próprio Spotify pode levar até uns 10 segundos).
+Com a opção **Esconder o overlay quando a música estiver pausada** (ligada no começo), o overlay sai da tela uns segundos depois de pausar e volta sozinho quando der play (pelo painel, chat ou Stream Deck é na hora; pelo próprio Spotify pode levar até uns 20 segundos).
 Quando o app muda de versão, o overlay se recarrega sozinho no OBS: não precisa apagar e criar a fonte de novo.
 Também continua existindo o arquivo `tocando_agora.txt`, pra quem prefere uma fonte de texto simples.
 
@@ -148,7 +148,7 @@ O `.gitignore` já impede que `tokens.json`, `config.json`, `fila.json` e `regis
 - **Histórico por live:** o app guarda as 3 últimas lives (a atual e as 2 anteriores). Escolha uma na lista e clique em **Criar playlist no Spotify**. A live nova começa sozinha quando a música volta a tocar depois de 4 horas parada. Com o login da Twitch, ela começa na hora em que você entra ao vivo (as músicas de "começando em breve" ficam na live nova), e uma pausa longa no meio da live não divide a live em duas. Quando entra uma 4ª live, a mais antiga sai da lista.
 - **Pedidos fechados continuam fechados:** se o app reiniciar, os pedidos voltam do jeito que estavam (abertos ou fechados).
 - **Login da Twitch vencido:** o app confere o login de hora em hora. Se vencer, o cartão da Twitch fica vermelho ("Login vencido") e o bot só lê o chat até você entrar de novo (passo 3 da Sincronização).
-- **"O Spotify pediu para ir mais devagar":** o Spotify limita quantas vezes um app pode falar com ele. O app já pergunta pouco e, se aparecer esse aviso, espera sozinho (de 1 a 15 minutos) e volta. Todos os apps da mesma conta de desenvolvedor do Spotify dividem esse limite, então use uma chave (Client ID) só pro StreamBeats.
+- **"O Spotify pediu para ir mais devagar":** o Spotify limita quantas vezes um app pode falar com ele. O Spotify não avisa quando a música troca, então o app precisa perguntar, mas pergunta o mínimo possível (modo econômico). Se aparecer esse aviso, ele espera sozinho (de 1 a 15 minutos) e volta. Todos os apps criados na mesma conta do site de desenvolvedor do Spotify dividem esse limite: se você tem outro app lá que ainda está rodando, ele gasta junto.
 - **Erro inesperado** não derruba o app no meio da live: fica anotado no `registro.log` e o app continua.
 - **O Client ID não é senha.** Os logins de verdade ficam no `tokens.json` e nunca aparecem no painel.
 - **Segurança:** o painel só funciona no próprio PC, e outros sites não conseguem mexer nele.
