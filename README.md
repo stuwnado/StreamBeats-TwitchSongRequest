@@ -86,7 +86,7 @@ O manual completo, com todos os comandos e opções, está em [**LEIA-ME.md**](L
 | `!earrape` | mods* | volume no máximo por alguns segundos |
 | `!skip` · `!sron` · `!sroff` | mods | pula · abre · fecha os pedidos |
 
-\* dá pra liberar pra VIPs, subs ou todos. Os nomes dos comandos são editáveis.
+\* dá pra liberar pra VIPs, subs ou todos. Os nomes dos comandos são editáveis. "Mods" inclui o Moderador Líder e o dono do canal.
 
 ## 🔒 Privacidade e segurança
 

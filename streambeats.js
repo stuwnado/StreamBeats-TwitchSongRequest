@@ -23,7 +23,7 @@ let sea = null;
 try { sea = require('node:sea'); } catch { /* Node antigo */ }
 const EH_EXE = !!(sea && sea.isSea && sea.isSea());
 
-const VERSAO = '1.1.2';
+const VERSAO = '1.1.3';
 // Repositório do GitHub de onde o app baixa atualizações ("usuario/repositorio").
 // Vazio = atualização automática desligada.
 const GITHUB_REPO = 'stuwnado/StreamBeats-TwitchSongRequest';
@@ -341,7 +341,8 @@ function alertaDe(f) {
   const texto = norm(f.titulo + ' ' + (f.album || ''));
   return cfg.palavras_alerta.find((p) => texto.includes(p)) || null;
 }
-const ehMod = (msg) => msg.badges.has('broadcaster') || msg.badges.has('moderator');
+// Moderador Líder (2025) tem selo próprio, "lead_moderator", no lugar do "moderator".
+const ehMod = (msg) => !!msg.mod || ['broadcaster', 'moderator', 'lead_moderator'].some((b) => msg.badges.has(b));
 const ehSubOuVip = (msg) => ['subscriber', 'founder', 'vip'].some((b) => msg.badges.has(b));
 function temPermissao(msg, nivel) {
   if (nivel === 'desligado') return false;
@@ -1472,6 +1473,7 @@ function conectarTwitch(canal, aoMensagem, login, token, aoStatus) {
           texto: m.final || '',
           id: m.tags.id,
           badges,
+          mod: m.tags.mod === '1',
           recompensa: m.tags['custom-reward-id'] || null,
         });
         break;
@@ -1689,6 +1691,16 @@ async function reverificarTwitch() {
 }
 
 // ---------------------------------------------------------------- comandos do chat
+// Viewer mandou !skip: explica que é só pra mods (no máximo 1 vez por minuto pra cada viewer, pra não virar spam).
+const avisoSkipPara = new Map();
+function avisarSkipSoMods(msg, cmd) {
+  const agora = Date.now();
+  if (agora - (avisoSkipPara.get(msg.usuario) || 0) < 60000) return;
+  avisoSkipPara.set(msg.usuario, agora);
+  const votar = cfg.votos_para_pular > 0 && cfg.comandos.voteskip[0];
+  responder(msg, votar ? `O ${cmd} é só pra mods. Use ${votar} pra votar pra pular.` : `O ${cmd} é só pra mods.`);
+}
+
 function responder(msg, texto) {
   log(`   ↳ ${msg.teste ? '(teste) ' : '@' + msg.nome + ': '}${texto}`);
   if (msg.teste || !irc || !irc.podeFalar) return;
@@ -1901,6 +1913,7 @@ async function aoMensagem(msg) {
     else if (c.earrape.includes(cmd)) await cmdEarrape(msg);
     else if (c.furarfila.includes(cmd)) await cmdFurarFila(msg, arg);
     else if (c.pular.includes(cmd) && mod) { await pular(); responder(msg, '⏭️ Pulando a música.'); }
+    else if (c.pular.includes(cmd)) avisarSkipSoMods(msg, cmd);
     else if (c.abrir.includes(cmd) && mod) { definirPedidosAbertos(true); responder(msg, '🔓 Pedidos de música abertos!'); }
     else if (c.fechar.includes(cmd) && mod) { definirPedidosAbertos(false); responder(msg, '🔒 Pedidos de música fechados.'); }
   } catch (e) {

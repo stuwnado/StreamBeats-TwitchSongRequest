@@ -2,6 +2,13 @@
 
 O que mudou em cada versão, em poucas palavras.
 
+## v1.1.3 (2026-11-22)
+
+Moderador Líder agora é reconhecido como mod.
+
+- Quem é Moderador Líder no canal pode usar os comandos de mod (como !skip, !sroff e !volume). Antes, o app não reconhecia o selo novo da Twitch e ignorava esses comandos.
+- Quando um viewer manda !skip, o bot responde que o comando é só pra mods e sugere o !voteskip.
+
 ## v1.1.2 (2026-11-22)
 
 Modo econômico: o app fala bem menos com o Spotify.

@@ -82,9 +82,10 @@ Se o streamer adicionar músicas direto pelo app do Spotify, elas tocam do jeito
 | `!furarfila música` | subs, VIPs e mods (dá pra mudar) | pede uma música na frente da fila |
 | `!earrape` | subs, VIPs e mods (dá pra mudar) | volume no máximo por alguns segundos, depois volta sozinho |
 | `!remover @fulano` | mods | tira o último pedido do fulano |
-| `!skip` ou `!pular` | mods | pula a música atual |
+| `!skip` ou `!pular` | mods | pula a música atual (viewer que tentar recebe a dica do `!voteskip`) |
 | `!sroff` / `!sron` | mods | fecha / abre os pedidos |
 
+Onde diz **mods**, vale moderador, Moderador Líder e o dono do canal.
 Os nomes dos comandos mudam em **Configuração → Nomes dos comandos**. Quem pode pedir muda em **Moderação → Regras de pedidos**. Quem usa o volume, o `!furarfila` e o `!earrape` muda em **Moderação → Volume e Comandos Especiais**.
 
 ## Pontos do canal
@@ -149,6 +150,7 @@ O `.gitignore` já impede que `tokens.json`, `config.json`, `fila.json` e `regis
 - **Pedidos fechados continuam fechados:** se o app reiniciar, os pedidos voltam do jeito que estavam (abertos ou fechados).
 - **Login da Twitch vencido:** o app confere o login de hora em hora. Se vencer, o cartão da Twitch fica vermelho ("Login vencido") e o bot só lê o chat até você entrar de novo (passo 3 da Sincronização).
 - **"O Spotify pediu para ir mais devagar":** o Spotify limita quantas vezes um app pode falar com ele. O Spotify não avisa quando a música troca, então o app precisa perguntar, mas pergunta o mínimo possível (modo econômico). Se aparecer esse aviso, ele espera sozinho (de 1 a 15 minutos) e volta. Todos os apps criados na mesma conta do site de desenvolvedor do Spotify dividem esse limite: se você tem outro app lá que ainda está rodando, ele gasta junto.
+- **Outro bot de música no canal** (StreamElements, Nightbot e outros): se ele também atende `!sr` ou `!skip`, os dois respondem ao mesmo comando. Desligue o pedido de música do outro bot ou mude os nomes dos comandos do StreamBeats.
 - **Erro inesperado** não derruba o app no meio da live: fica anotado no `registro.log` e o app continua.
 - **O Client ID não é senha.** Os logins de verdade ficam no `tokens.json` e nunca aparecem no painel.
 - **Segurança:** o painel só funciona no próprio PC, e outros sites não conseguem mexer nele.
