@@ -91,6 +91,7 @@ const CONFIG_PADRAO = {
   somente_subs_e_vips: false,
   aprovar_pedidos: false,
   esconder_overlay_pausado: true,
+  pedidos_abertos: true, // fica salvo: se o app reiniciar, os pedidos continuam abertos ou fechados como estavam
   palavras_bloqueadas: [],
   palavras_alerta: [],
   usuarios_bloqueados: [],
@@ -132,7 +133,9 @@ let proximoId = 1;
 // A fila do StreamBeats. O primeiro item pode estar "enviado" (já na fila do Spotify, tocando a seguir).
 let pedidos = []; // {id, uri, titulo, nome, artistas, imagem, duracao, explicita, album, usuario, pedidoPor, quando, prioridade, alerta, enviado, enviadoEm, pular}
 let pendentes = []; // esperando aprovação do streamer
-let historico = { desde: null, faixas: [] }; // tudo que tocou: {uri, titulo, pedidoPor, quando}
+let historico = { desde: null, faixas: [] }; // a live atual: tudo que tocou {uri, titulo, pedidoPor, quando}
+let livesAnteriores = []; // lives guardadas, a mais recente primeiro: { desde, faixas }
+const MAX_LIVES_GUARDADAS = 2; // + a atual = as 3 últimas lives
 const ultimoPedidoDe = new Map();
 const ultimoFurarFilaDe = new Map();
 const votosPular = new Set();
@@ -151,6 +154,7 @@ const estado = {
   chat: { conectado: false, canal: null, respondendoComo: null },
   twitch: null, // {login, userId, scopes}
   aoVivo: null, // true = live no ar · false = offline · null = não dá pra saber (sem login da Twitch)
+  twitchLoginVencido: false, // o login da Twitch venceu ou foi revogado (o cartão do painel avisa)
   eventsub: false,
   player: null, // {tocando, progresso, duracao, quando}
   atualizacao: null, // {versao, nova, notas, urlExe, urlSha, pagina, erro}
@@ -351,7 +355,7 @@ function normalizarConfig(c) {
   if (!/^[0-9a-f]{32}$/i.test(n.spotify_client_id)) n.spotify_client_id = '';
   n.twitch_client_id = String(n.twitch_client_id || '').trim();
   if (!/^[0-9a-z]{20,40}$/i.test(n.twitch_client_id)) n.twitch_client_id = '';
-  for (const k of ['responder_no_chat', 'bloquear_explicitas', 'somente_subs_e_vips', 'aprovar_pedidos', 'esconder_overlay_pausado']) n[k] = !!n[k];
+  for (const k of ['responder_no_chat', 'bloquear_explicitas', 'somente_subs_e_vips', 'aprovar_pedidos', 'esconder_overlay_pausado', 'pedidos_abertos']) n[k] = !!n[k];
   const P = CONFIG_PADRAO; // valor inválido volta pro padrão
   n.cooldown_segundos = inteiro(n.cooldown_segundos, P.cooldown_segundos, 0, 3600);
   n.max_pedidos_por_pessoa = inteiro(n.max_pedidos_por_pessoa, P.max_pedidos_por_pessoa, 1, 100);
@@ -399,9 +403,18 @@ function carregarConfig() {
   // instalação nova: tudo é novidade, então a janela de "Novidades" só aparece na próxima versão
   if (!existia) cfg.ultima_versao_vista = VERSAO;
   salvarConfig();
+  pedidosAbertos = cfg.pedidos_abertos;
+  if (!pedidosAbertos) log('🔒 Os pedidos continuam fechados, como estavam antes de o app fechar.');
 }
 function salvarConfig() {
   gravarSeguro(ARQ_CONFIG, JSON.stringify(cfg, null, 2));
+}
+// Abre ou fecha os pedidos e guarda no config.json (vale pelo painel, pelo chat e pelo Stream Deck).
+function definirPedidosAbertos(abertos) {
+  pedidosAbertos = !!abertos;
+  if (cfg.pedidos_abertos === pedidosAbertos) return;
+  cfg.pedidos_abertos = pedidosAbertos;
+  try { salvarConfig(); } catch (e) { log('⚠️ Não consegui salvar se os pedidos estão abertos: ' + e.message); }
 }
 
 async function aplicarConfig(novo) {
@@ -424,7 +437,7 @@ async function aplicarConfig(novo) {
 // ---------------------------------------------------------------- fila salva no disco
 function salvarFila() {
   try {
-    gravarSeguro(ARQ_FILA, JSON.stringify({ pedidos, pendentes, historico }, null, 2));
+    gravarSeguro(ARQ_FILA, JSON.stringify({ pedidos, pendentes, historico, livesAnteriores }, null, 2));
   } catch (e) {
     log('⚠️ Não consegui salvar a fila: ' + e.message);
   }
@@ -445,6 +458,13 @@ function carregarFila() {
     pedidos = (Array.isArray(d.pedidos) ? d.pedidos : []).filter(ok);
     pendentes = (Array.isArray(d.pendentes) ? d.pendentes : []).filter(ok);
     if (d.historico && Array.isArray(d.historico.faixas)) historico = { desde: d.historico.desde || null, faixas: d.historico.faixas.filter(ok) };
+    if (Array.isArray(d.livesAnteriores)) {
+      livesAnteriores = d.livesAnteriores
+        .filter((l) => l && Array.isArray(l.faixas))
+        .map((l) => { const faixas = l.faixas.filter(ok); return { desde: horaValida(l.desde) || horaValida(faixas[0] && faixas[0].quando) || Date.now(), faixas }; })
+        .filter((l) => l.faixas.length)
+        .slice(0, MAX_LIVES_GUARDADAS);
+    }
     proximoId = Math.max(0, ...[...pedidos, ...pendentes].map((p) => Number(p.id) || 0)) + 1;
     if (pedidos.length || pendentes.length) log(`📂 Fila recuperada: ${pedidos.length} pedido(s)` + (pendentes.length ? ` e ${pendentes.length} esperando aprovação` : '') + '.');
     if (lido.doBackup) salvarFila(); // o fila.json estava estragado: grava ele de novo a partir da cópia de segurança
@@ -791,11 +811,21 @@ async function tocarAgora(id) {
   return null;
 }
 
-async function criarPlaylist() {
-  const uris = [...new Set(historico.faixas.map((f) => f.uri))].filter((u) => u.startsWith('spotify:track:'));
-  if (!uris.length) throw new Error('Ainda não tocou nenhuma música nesta live.');
-  if (!podeCriarPlaylist()) throw new Error('Clique em "Conectar outra conta" no Spotify (aba Configurar) e autorize de novo para liberar a criação de playlist.');
-  const dia = new Date(historico.desde || Date.now()).toLocaleDateString('pt-BR');
+// Músicas (sem repetir) que dá pra pôr numa playlist do Spotify
+const urisDaLive = (live) => [...new Set(live.faixas.map((f) => f.uri))].filter((u) => u.startsWith('spotify:track:'));
+// qual: "atual" (ou nada) = a live atual; senão o início ("desde") de uma live guardada
+function acharLive(qual) {
+  if (qual == null || qual === '' || qual === 'atual') return historico;
+  return livesAnteriores.find((l) => String(l.desde) === String(qual)) || null;
+}
+
+async function criarPlaylist(qual) {
+  const live = acharLive(qual);
+  if (!live) throw new Error('Essa live não está mais guardada (o app guarda só as 3 últimas).');
+  const uris = urisDaLive(live);
+  if (!uris.length) throw new Error('Ainda não tocou nenhuma música nessa live.');
+  if (!podeCriarPlaylist()) throw new Error('Clique em "Conectar outra conta" no Spotify (Configuração → Sincronização) e autorize de novo para liberar a criação de playlist.');
+  const dia = new Date(live.desde || Date.now()).toLocaleDateString('pt-BR');
   const corpo = { name: `StreamBeats - Live ${dia}`, description: 'Músicas que tocaram na live (feita pelo StreamBeats).', public: false };
   let pl;
   try {
@@ -879,6 +909,7 @@ async function aoTrocarMusica(item) {
       }
     }
     tocandoAgora = { ...f, pedidoPor, usuario, alerta: pedido ? pedido.alerta : alertaDe(f) };
+    separarSeFoiOutraLive();
     if (!historico.desde) historico.desde = Date.now();
     if (item.type !== 'episode') historico.faixas.push({ uri: f.uri, titulo: f.titulo, pedidoPor, quando: Date.now() });
     if (historico.faixas.length > 3000) historico.faixas.shift();
@@ -949,11 +980,13 @@ async function infoTwitch() {
     if (r.status === 401) {
       delete tokens.twitch;
       salvarTokens();
-      log('⚠️ O login da Twitch expirou. Entre de novo no painel (Configurar → Sincronização).');
+      estado.twitchLoginVencido = true;
+      log('⚠️ O login da Twitch venceu. Entre de novo no painel (Configuração → Sincronização, passo 3).');
       return null;
     }
     if (!r.ok) return null;
     const d = await r.json();
+    if (d.login) estado.twitchLoginVencido = false;
     return d.login ? { login: d.login, userId: d.user_id, scopes: d.scopes || [] } : null;
   } catch {
     return null;
@@ -1404,13 +1437,75 @@ async function reconectarChat() {
   verificarAoVivo();
 }
 
+// Histórico por live: o app guarda as 3 últimas lives (a atual + 2 anteriores).
+// Um intervalo de 4 horas sem música separa uma live da outra.
+const NOVA_LIVE_APOS_MS = 4 * 3600000;
+// Hora de uma música; 0 se estiver estragada (antes de 2001 não existia o app)
+const horaValida = (q) => (Number(q) > 1e12 ? Number(q) : 0);
+// Separa músicas em lives (da mais antiga pra mais nova), cortando onde houve 4h ou mais sem música.
+// desdePadrao: início da lista, usado quando a primeira música não tem uma hora válida.
+function separarEmLives(faixas, desdePadrao) {
+  const lives = [];
+  for (const f of faixas) {
+    const ultima = lives[lives.length - 1];
+    const quando = horaValida(f.quando);
+    const fimUltima = ultima ? horaValida(ultima.faixas[ultima.faixas.length - 1].quando) : 0;
+    // sem hora válida não dá pra medir o intervalo: a música fica junto com a anterior
+    if (ultima && (!quando || !fimUltima || quando - fimUltima < NOVA_LIVE_APOS_MS)) ultima.faixas.push(f);
+    else lives.push({ desde: quando || horaValida(desdePadrao) || Date.now(), faixas: [f] });
+  }
+  return lives;
+}
+// Guarda lives (da mais antiga pra mais nova) e mantém só as 2 mais recentes entre as anteriores.
+function arquivarLives(lives) {
+  for (const l of lives) if (l.faixas.length) livesAnteriores.unshift(l);
+  livesAnteriores = livesAnteriores.slice(0, MAX_LIVES_GUARDADAS);
+}
+
+// Quando a live começa, o que tocou antes do último intervalo de 4h sem música é de lives anteriores:
+// vai pra lista de lives guardadas (a playlist não mistura dias e a live atual começa limpa).
+// As músicas tocadas logo antes de abrir a live (tela de "começando em breve") continuam na atual.
+function comecarHistoricoDeLiveNova() {
+  const f = historico.faixas;
+  const quando = (i) => Number(f[i].quando) || 0;
+  let corte = f.length; // posição da primeira música desta live (f.length = nenhuma: tudo é antigo)
+  if (f.length && Date.now() - quando(f.length - 1) < NOVA_LIVE_APOS_MS) {
+    corte = f.length - 1;
+    while (corte > 0 && quando(corte) - quando(corte - 1) < NOVA_LIVE_APOS_MS) corte--;
+  }
+  if (corte === 0) return false; // tudo é desta live (ou o histórico está vazio)
+  arquivarLives(separarEmLives(f.slice(0, corte), historico.desde));
+  historico = { desde: corte < f.length ? quando(corte) : null, faixas: f.slice(corte) };
+  salvarFila();
+  log(`📀 Live nova: a lista anterior (${corte} música(s)) foi guardada e a contagem desta live começou.`);
+  return true;
+}
+
+// Sem o login da Twitch o app não sabe quando a live começa. Então, fora da live (ou sem saber),
+// depois de 4 horas sem música a próxima música começa uma live nova e a lista anterior fica guardada.
+// Durante a live (com o login), uma pausa longa não divide a live em duas.
+function separarSeFoiOutraLive() {
+  if (estado.aoVivo === true) return false;
+  const ultima = historico.faixas[historico.faixas.length - 1];
+  const quando = ultima ? horaValida(ultima.quando) : 0;
+  if (!quando || Date.now() - quando < NOVA_LIVE_APOS_MS) return false;
+  const n = historico.faixas.length;
+  arquivarLives(separarEmLives(historico.faixas, historico.desde));
+  historico = { desde: null, faixas: [] };
+  log(`📀 Live nova: depois de 4 horas sem música, a lista anterior (${n} música(s)) foi guardada.`);
+  return true;
+}
+
 // A live está no ar? Só dá pra saber com o login da Twitch (passo 3); sem ele fica "não sei" (null).
 async function verificarAoVivo() {
   const t = tokens.twitch;
   if (!cfg.canal_twitch || !estado.twitch || !t || t.client_id !== cfg.twitch_client_id) { estado.aoVivo = null; return; }
   try {
     const d = await helix('GET', '/streams', { user_login: cfg.canal_twitch });
+    const estava = estado.aoVivo;
     estado.aoVivo = !!(d && Array.isArray(d.data) && d.data.some((s) => s.type === 'live'));
+    // a live acabou de começar (ou o app abriu com ela no ar): se for uma live nova, o histórico recomeça
+    if (estado.aoVivo && estava !== true) comecarHistoricoDeLiveNova();
   } catch {
     // sem internet ou a Twitch não respondeu: fica como estava e tenta de novo daqui a pouco
   }
@@ -1431,6 +1526,18 @@ async function recuperarTwitch() {
   } finally {
     recuperandoTwitch = false;
   }
+}
+
+// A Twitch exige que apps com login confiram o login ao abrir (feito ao conectar o chat) e depois de hora em hora.
+// Se ele venceu ou foi revogado, o bot passa a só ler o chat e o cartão da Twitch no painel avisa "Login vencido".
+async function conferirLoginTwitch() {
+  const t = tokens.twitch;
+  if (!t || !cfg.twitch_client_id || t.client_id !== cfg.twitch_client_id) return;
+  if (!estado.twitch) { await recuperarTwitch(); return; } // ainda não entrou com o login (ex.: abriu sem internet)
+  const info = await infoTwitch();
+  if (info) { estado.twitch = info; return; }
+  if (!tokens.twitch) await reconectarChat(); // venceu: reconecta só lendo (sem respostas nem pontos até entrar de novo)
+  // sem resposta (internet): confere de novo daqui a uma hora
 }
 
 // Clique no cartão de status do painel: confere a conexão usando o login que já está salvo.
@@ -1457,6 +1564,7 @@ async function reverificarSpotify() {
 
 async function reverificarTwitch() {
   if (!cfg.canal_twitch) return { conectado: false, mensagem: 'Falta colocar o canal da Twitch na Sincronização.' };
+  if (estado.twitchLoginVencido) return { conectado: false, mensagem: 'O login da Twitch venceu. Entre de novo na Sincronização (passo 3).' };
   const tinhaLogin = !!(tokens.twitch && tokens.twitch.client_id === cfg.twitch_client_id);
   if (estado.chat.conectado) {
     // o chat já está funcionando: só confere o login, sem derrubar a conexão
@@ -1696,8 +1804,8 @@ async function aoMensagem(msg) {
     else if (c.earrape.includes(cmd)) await cmdEarrape(msg);
     else if (c.furarfila.includes(cmd)) await cmdFurarFila(msg, arg);
     else if (c.pular.includes(cmd) && mod) { await pular(); responder(msg, '⏭️ Pulando a música.'); }
-    else if (c.abrir.includes(cmd) && mod) { pedidosAbertos = true; responder(msg, '🔓 Pedidos de música abertos!'); }
-    else if (c.fechar.includes(cmd) && mod) { pedidosAbertos = false; responder(msg, '🔒 Pedidos de música fechados.'); }
+    else if (c.abrir.includes(cmd) && mod) { definirPedidosAbertos(true); responder(msg, '🔓 Pedidos de música abertos!'); }
+    else if (c.fechar.includes(cmd) && mod) { definirPedidosAbertos(false); responder(msg, '🔒 Pedidos de música fechados.'); }
   } catch (e) {
     log('❗ Erro: ' + e.message);
     responder(msg, e.semLogin ? '⚠️ O StreamBeats não está conectado ao Spotify agora.' : '⚠️ Deu um erro ao falar com o Spotify, tenta de novo daqui a pouco.');
@@ -1869,6 +1977,7 @@ function estadoParaPainel() {
       podeApi: podeUsarApiPontos(),
       eventsub: !!estado.eventsub,
       aoVivo: estado.aoVivo,
+      loginVencido: estado.twitchLoginVencido,
     },
     player: estado.player,
     earrapeAtivo: Date.now() < earrapeAte,
@@ -1877,7 +1986,12 @@ function estadoParaPainel() {
     votos: { atual: votosPular.size, precisa: cfg.votos_para_pular },
     pedidos: pedidos.map(paraPainel),
     pendentes: pendentes.map(paraPainel),
-    historico: { quantidade: historico.faixas.length, desde: historico.desde },
+    historico: {
+      quantidade: historico.faixas.length, desde: historico.desde,
+      // a atual + as guardadas, com quantas músicas iriam pra playlist de cada uma
+      lives: [{ id: 'atual', desde: historico.desde, quantidade: urisDaLive(historico).length },
+        ...livesAnteriores.map((l) => ({ id: String(l.desde), desde: l.desde, quantidade: urisDaLive(l).length }))],
+    },
     aprendendoRecompensa,
     novidades: lerNovidades(),
     deck: {
@@ -2000,13 +2114,8 @@ async function acaoDoPainel(a) {
     case 'atualizar':
       await aplicarAtualizacao();
       return 'Atualizando... o app reabre sozinho.';
-    case 'limpar-historico':
-      historico = { desde: null, faixas: [] };
-      salvarFila();
-      log('🧹 Histórico da live apagado.');
-      return null;
     case 'pedidos':
-      pedidosAbertos = !!a.abertos;
+      definirPedidosAbertos(a.abertos);
       log(pedidosAbertos ? '🔓 Pedidos abertos.' : '🔒 Pedidos fechados.');
       return null;
     case 'novidades-vistas':
@@ -2132,7 +2241,7 @@ async function tratarApi(req, res, rota) {
         return json(res, 200, { ok: true, ...r });
       }
       case '/api/criar-playlist': {
-        const url = await criarPlaylist();
+        const url = await criarPlaylist(corpo.live);
         return json(res, 200, { ok: true, url });
       }
       case '/api/spotify/desconectar':
@@ -2142,6 +2251,7 @@ async function tratarApi(req, res, rota) {
       case '/api/twitch/desconectar':
         delete tokens.twitch;
         salvarTokens();
+        estado.twitchLoginVencido = false; // saiu de propósito: não é login vencido
         log('Login da Twitch removido.');
         await reconectarChat();
         return json(res, 200, { ok: true });
@@ -2246,6 +2356,7 @@ fetch('/twitch-token?' + new URLSearchParams({access_token: p.get('access_token'
           if (!tok) return res.end('❌ A Twitch não foi autorizada.');
           tokens.twitch = { access_token: tok, client_id: cfg.twitch_client_id };
           salvarTokens();
+          estado.twitchLoginVencido = false;
           if (!cfg.responder_no_chat) { cfg.responder_no_chat = true; salvarConfig(); }
           await reconectarChat();
           return res.end('✅ Twitch conectada! Voltando ao painel...');
@@ -2341,6 +2452,7 @@ async function main() {
   setInterval(atualizarPlayer, INTERVALO_MS);
   setInterval(verificarAoVivo, 60000); // a live está no ar? (confere a cada minuto)
   setInterval(recuperarTwitch, 30000); // abriu sem internet? quando a Twitch voltar, entra com o login de novo
+  setInterval(conferirLoginTwitch, 3600000); // a Twitch exige conferir o login de hora em hora (o da abertura é feito ao conectar o chat)
   if (GITHUB_REPO) {
     setTimeout(() => procurarAtualizacao(), 10000);
     setInterval(() => procurarAtualizacao(), 6 * 3600000);
@@ -2368,5 +2480,11 @@ module.exports = {
     atualizarPlayer, verificarSpotify, reconectarChat, recuperarTwitch, reverificarTwitch,
     gravarSeguro, lerJsonComBackup, carregarConfig, carregarFila,
     get cfg() { return cfg; }, get irc() { return irc; },
+    // histórico por live, login da Twitch de hora em hora, pedidos abertos/fechados salvos
+    verificarAoVivo, comecarHistoricoDeLiveNova, conferirLoginTwitch, estadoParaPainel,
+    definirHistorico: (h) => { historico = h; }, get pedidosAbertos() { return pedidosAbertos; },
+    // as 3 últimas lives
+    get livesAnteriores() { return livesAnteriores; }, definirLivesAnteriores: (l) => { livesAnteriores = l; },
+    separarSeFoiOutraLive, criarPlaylist, separarEmLives,
   },
 };

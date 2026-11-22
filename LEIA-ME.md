@@ -18,7 +18,7 @@ Roda no PC dele, de graça, sem limite de pedidos e sem mandar dados para sites 
 - **Controles do Spotify no painel:** voltar, play/pausa, pular e volume.
 - **Stream Deck** (Fifine, Elgato e outros): um atalho pra cada comando, é só arrastar pro botão.
 - **Status sempre à vista:** dois cartões no canto mostram a Twitch (ao vivo, offline, desconectada) e o Spotify (tocando, pausado, desconectado).
-- **Histórico da live**, com botão pra criar uma playlist no Spotify com tudo que tocou.
+- **Histórico das 3 últimas lives**, com botão pra criar uma playlist no Spotify com as músicas da live que você escolher.
 - A fila fica **salva no PC**, e o app roda **sem janela preta**.
 - **Atualização pelo GitHub** com um clique (depois de configurada).
 
@@ -133,7 +133,7 @@ O `.gitignore` já impede que `tokens.json`, `config.json`, `fila.json` e `regis
 | Arquivo | O que é |
 |---|---|
 | `config.json` | as configurações do painel |
-| `fila.json` | a fila, os pedidos esperando aprovação e o histórico da live |
+| `fila.json` | a fila, os pedidos esperando aprovação e o histórico das 3 últimas lives |
 | `tokens.json` | os logins do Spotify e da Twitch. **Não mande para ninguém.** Se apagar, é só conectar de novo |
 | `registro.log` | tudo que aconteceu. Mande esse arquivo quando for pedir ajuda com algum problema |
 | `tocando_agora.txt` | a música atual, para o OBS |
@@ -145,6 +145,9 @@ O `.gitignore` já impede que `tokens.json`, `config.json`, `fila.json` e `regis
 
 - **O login do Spotify se renova sozinho.** O acesso vale 1 hora e o app renova sem você perceber.
 - **Chat caiu?** Ele reconecta sozinho, sem perder a fila. Os pontos do canal também reconectam sozinhos.
+- **Histórico por live:** o app guarda as 3 últimas lives (a atual e as 2 anteriores). Escolha uma na lista e clique em **Criar playlist no Spotify**. A live nova começa sozinha quando a música volta a tocar depois de 4 horas parada. Com o login da Twitch, ela começa na hora em que você entra ao vivo (as músicas de "começando em breve" ficam na live nova), e uma pausa longa no meio da live não divide a live em duas. Quando entra uma 4ª live, a mais antiga sai da lista.
+- **Pedidos fechados continuam fechados:** se o app reiniciar, os pedidos voltam do jeito que estavam (abertos ou fechados).
+- **Login da Twitch vencido:** o app confere o login de hora em hora. Se vencer, o cartão da Twitch fica vermelho ("Login vencido") e o bot só lê o chat até você entrar de novo (passo 3 da Sincronização).
 - **Erro inesperado** não derruba o app no meio da live: fica anotado no `registro.log` e o app continua.
 - **O Client ID não é senha.** Os logins de verdade ficam no `tokens.json` e nunca aparecem no painel.
 - **Segurança:** o painel só funciona no próprio PC, e outros sites não conseguem mexer nele.

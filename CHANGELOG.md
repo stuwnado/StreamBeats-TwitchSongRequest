@@ -2,7 +2,7 @@
 
 O que mudou em cada versão, em poucas palavras.
 
-## v1.1.0 (2026-11-21)
+## v1.1.0 (2026-11-22)
 
 Painel novo, mais limpo, e controle pelo Stream Deck.
 
@@ -13,6 +13,7 @@ Painel novo, mais limpo, e controle pelo Stream Deck.
 - As opções salvam sozinhas: é só mudar. Os campos mostram a unidade (seg, min, %) dentro da caixinha.
 - Pra tirar um pedido da fila, use a lixeira. Ela não bane a música.
 - A janela abre sempre do mesmo tamanho, com tudo no lugar.
+- O histórico guarda as 3 últimas lives: escolha uma e crie a playlist dela no Spotify. O botão "Começar do zero" saiu: o app separa as lives sozinho.
 - Esta janela de novidades aparece uma vez a cada versão nova.
 
 ## v1.0.2 (2026-11-21)

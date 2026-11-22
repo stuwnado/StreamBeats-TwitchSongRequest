@@ -354,6 +354,18 @@
   .estado-con { padding: 9px 12px; border-radius: var(--raio-p); background: rgba(255, 255, 255, .04); border: 1px solid var(--borda); margin-bottom: 12px; color: #d6d4e0; }
   .estado-con.ok { background: var(--verde-fundo); border-color: rgba(30, 215, 96, .2); color: var(--verde-claro); }
 
+  /* histórico: lista das lives guardadas (escolha uma pra criar a playlist dela) */
+  .lista-lives { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+  .live-opcao { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; border-radius: var(--raio-p); text-align: left; cursor: pointer;
+    background: rgba(255, 255, 255, .03); border: 1px solid var(--borda); color: var(--texto); font-weight: 500;
+    transition: background-color 150ms ease, border-color 150ms ease; }
+  .live-opcao:hover { background: rgba(255, 255, 255, .06); border-color: var(--borda-forte); }
+  .live-opcao[aria-checked="true"] { background: var(--roxo-fundo); border-color: rgba(145, 71, 255, .6); }
+  .marca-radio { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--fraco); flex: none; transition: border-color 150ms ease, box-shadow 150ms ease; }
+  .live-opcao[aria-checked="true"] .marca-radio { border-color: var(--roxo-claro); box-shadow: inset 0 0 0 2px #1d1830, inset 0 0 0 8px var(--roxo-claro); }
+  .qtd-live { color: var(--suave); font-variant-numeric: tabular-nums; }
+  .dica.uma-linha { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
   /* overlay: miniatura do overlay real */
   .opcoes-overlay { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; margin-bottom: 12px; }
   .opcao { background: rgba(255, 255, 255, .03); border: 1px solid var(--borda); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
@@ -749,12 +761,11 @@
           <details class="bloco" open id="secHistorico">
             <summary class="bloco-titulo"><i class="ic" data-ic="disco"></i>Histórico da live<i class="ic seta" data-ic="seta"></i></summary>
             <div class="corpo">
-              <div class="estado-con" id="histEstado">Nenhuma música ainda.</div>
+              <div class="lista-lives" id="listaLives" role="radiogroup" aria-label="Lives guardadas"></div>
               <div class="linha">
                 <button class="botao verde" type="button" id="criarPlaylist">Criar playlist no Spotify</button>
-                <button class="botao perigo" type="button" id="limparHist">Começar do zero</button>
               </div>
-              <small class="dica" id="histDica"></small>
+              <small class="dica uma-linha" id="histDica"></small>
             </div>
           </details>
 
@@ -1034,12 +1045,37 @@ $('#conectarTwitch').onclick = async () => {
   location.href = '/login/twitch?k=' + CHAVE;
 };
 $('#desconTwitch').onclick = async () => { await api('/api/twitch/desconectar', {}); atualizar(); };
+// ------------------------------------------------ histórico: as 3 últimas lives (a atual + 2 guardadas)
+let liveEscolhida = 'atual'; // a live escolhida é guardada pela data de início, pra não trocar sozinha quando a lista muda
+const diaMes = (ms) => new Date(ms).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+const horaMin = (ms) => new Date(ms).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+function desenharLives(e) {
+  const h = e.historico;
+  const lives = h.lives || [{ id: 'atual', desde: h.desde, quantidade: h.quantidade }];
+  if (!lives.some((l) => l.id === liveEscolhida)) liveEscolhida = 'atual'; // a escolhida saiu da lista
+  const dias = lives.map((l) => (l.desde ? diaMes(l.desde) : ''));
+  const html = lives.map((l, i) => {
+    const mesmoDia = dias[i] && dias.filter((d) => d === dias[i]).length > 1; // duas lives no mesmo dia: mostra a hora
+    const data = dias[i] ? dias[i] + (mesmoDia ? ' ' + horaMin(l.desde) : '') : '';
+    const nome = l.id === 'atual' ? 'Live atual' + (data ? ` (${data})` : '') : 'Live ' + data;
+    return `<button type="button" class="live-opcao" role="radio" aria-checked="${l.id === liveEscolhida}" data-live="${esc(l.id)}">
+      <span class="marca-radio"></span><span>${esc(nome)}</span><span class="qtd-live">— ${l.quantidade === 1 ? '1 música' : l.quantidade + ' músicas'}</span></button>`;
+  }).join('');
+  if (mudou('lives', html)) $('#listaLives').innerHTML = html;
+  const escolhida = lives.find((l) => l.id === liveEscolhida);
+  $('#criarPlaylist').disabled = !(escolhida && escolhida.quantidade) || !e.spotify.conectado;
+}
+$('#listaLives').onclick = (ev) => {
+  const b = ev.target.closest('[data-live]');
+  if (!b) return;
+  liveEscolhida = b.dataset.live;
+  if (est) desenharLives(est);
+};
 $('#criarPlaylist').onclick = async () => {
   toast('Criando a playlist...');
-  const d = await api('/api/criar-playlist', {});
+  const d = await api('/api/criar-playlist', { live: liveEscolhida });
   if (d.ok) { toast('📀 Playlist criada no seu Spotify!'); if (d.url) window.open(d.url, '_blank'); }
 };
-$('#limparHist').onclick = () => { if (confirm('Apagar o histórico e começar uma live nova?')) acao('limpar-historico'); };
 $('#overlayDireita').onchange = () => desenharOverlayLinks();
 $('#btAtualizacao').onclick = () => { irPara('config'); $('#secAtualizacoes').open = true; $('#secAtualizacoes').scrollIntoView({ block: 'nearest' }); };
 $('#criarAtalhos').onclick = () => { toast('Criando os atalhos...'); acao('criar-atalhos'); };
@@ -1301,6 +1337,7 @@ function desenharStatus(e) {
   const canal = c.canal_twitch ? '#' + c.canal_twitch : 'Sem canal';
   if (!c.canal_twitch) pintar('#stTwitch', 'vermelho', 'Desconectado', 'Sem canal', 'Falta colocar o canal da Twitch na Sincronização.');
   else if (!e.chat.conectado) pintar('#stTwitch', 'vermelho', 'Desconectado', canal, 'Não está conectado ao chat da Twitch.');
+  else if (e.twitch.loginVencido) pintar('#stTwitch', 'vermelho', 'Login vencido', canal, 'O login da Twitch venceu: o bot só lê o chat (sem respostas nem pontos). Entre de novo no passo 3 da Sincronização.');
   else if (e.twitch.aoVivo === true) pintar('#stTwitch', 'verde', 'Ao vivo', canal, 'A live está no ar.');
   else if (e.twitch.aoVivo === false) pintar('#stTwitch', 'cinza', 'Offline', canal, 'Lendo o chat. A live não está no ar.');
   else pintar('#stTwitch', 'cinza', 'Conectado', canal, 'Lendo o chat. Pra saber se a live está no ar, entre na Twitch (passo 3 da Sincronização).');
@@ -1411,7 +1448,8 @@ function desenhar() {
   const twE = $('#twEstado');
   twE.className = 'estado-con' + (e.chat.respondendoComo ? ' ok' : '');
   twE.textContent = e.chat.respondendoComo ? '✅ Respondendo como ' + e.chat.respondendoComo
-    : e.twitchLogado ? 'Login feito, mas "Responder no chat" está desligado' : 'Não conectado';
+    : e.twitchLogado ? 'Login feito, mas "Responder no chat" está desligado'
+    : e.twitch.loginVencido ? '⚠️ O login venceu. Clique em "Entrar na Twitch" de novo.' : 'Não conectado';
   $('#desconTwitch').hidden = !e.twitchLogado;
   document.querySelector('[data-copiar=spotify]').textContent = e.redirects.spotify;
   document.querySelector('[data-copiar=twitch]').textContent = e.redirects.twitch;
@@ -1424,13 +1462,10 @@ function desenhar() {
     $('#criarAtalhos').disabled = !e.deck.windows;
   }
 
-  const h = e.historico;
-  const quando = h.desde ? new Date(h.desde).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '';
-  $('#histEstado').textContent = h.quantidade ? `${h.quantidade} música(s) tocaram desde ${quando}.` : 'Nenhuma música ainda.';
-  $('#criarPlaylist').disabled = !h.quantidade || !conectado;
+  desenharLives(e);
   $('#histDica').textContent = conectado && !e.podeCriarPlaylist
-    ? 'Pra criar playlists, clique em "Conectar outra conta" no Spotify e autorize de novo (só uma vez).'
-    : 'Cria uma playlist privada na sua conta com tudo que tocou. Use "Começar do zero" no início de cada live.';
+    ? 'Pra criar playlists, reconecte o Spotify (passo 1 da Sincronização).'
+    : 'Escolha uma live e crie uma playlist privada com as músicas dela.';
 
   // ajuda
   const cm = c.comandos;

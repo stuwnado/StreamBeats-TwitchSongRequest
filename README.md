@@ -48,12 +48,14 @@ O chat digita `!sr dynamite - BTS` e a música entra na fila. O StreamBeats é u
 - **Pontos do canal:** o app cria as recompensas na Twitch (Pedir música, Furar fila, Earrape), liga e desliga cada uma e **devolve os pontos sozinho** quando um pedido falha.
 
 **Pra live**
-- Overlay pro OBS (Fonte de Navegador), com capa, nome, barra de tempo, "pedida por" e as próximas da fila. O fundo é transparente.
-- Histórico da live, com botão pra criar uma playlist no Spotify com tudo que tocou.
+- Overlay pro OBS (Fonte de Navegador), com capa, nome, barra de tempo, "pedida por" e as próximas da fila. O fundo é transparente, e ele some sozinho quando você pausa a música.
+- **Stream Deck** (Fifine, Elgato e outros): um atalho pra cada comando (tocar/pausar, pular, volume, earrape e mais). É só arrastar pro botão.
+- Dois cartões no canto do painel mostram se a live está no ar e se o Spotify está tocando. Clique num deles pra reconectar.
+- Histórico das 3 últimas lives, com botão pra criar uma playlist no Spotify com as músicas da live que você escolher.
 - Painel numa janela própria (sem a janela preta), que reconecta sozinho.
 - Atualização automática pelos Releases do GitHub, com conferência de assinatura SHA-256.
 
-<p align="center"><img src="docs/painel-moderacao.png" width="760" alt="Aba de moderação"></p>
+<p align="center"><img src="docs/painel-moderacao.png" width="760" alt="Aba Moderação: regras de pedidos e limites"></p>
 
 ## 🚀 Começando
 
@@ -61,10 +63,11 @@ O chat digita `!sr dynamite - BTS` e a música entra na fila. O StreamBeats é u
 
 1. Baixe o **`StreamBeats-TwitchSongRequest.exe`** em [**Releases**](../../releases/latest) e coloque numa pasta própria.
 2. Abra. Na primeira vez, o Windows pode avisar "O Windows protegeu o computador", porque o app não tem assinatura digital paga. Clique em **Mais informações → Executar assim mesmo**.
-3. O painel abre no quadro **Sincronização**, com 3 passos:
-   1. **Spotify:** crie um app grátis em [developer.spotify.com](https://developer.spotify.com/dashboard). O painel mostra o passo a passo e o endereço exato pra colar.
-   2. **Canal da Twitch:** o nome do seu canal.
+3. O painel abre na aba **Configuração**, no quadro **Sincronização**:
+   1. **Spotify** (obrigatório): crie um app grátis em [developer.spotify.com](https://developer.spotify.com/dashboard). O painel mostra o passo a passo e o endereço exato pra colar.
+   2. **Canal da Twitch** (obrigatório): o nome do seu canal.
    3. **Entrar na Twitch** (recomendado): faz o bot responder no chat e libera os pontos do canal.
+   4. **Pontos do canal** (opcional): recompensas pra pedir música, furar a fila e earrape.
 4. Dê play numa playlist no Spotify. Quando os pedidos acabam, ele volta pra ela.
 
 O manual completo, com todos os comandos e opções, está em [**LEIA-ME.md**](LEIA-ME.md).
