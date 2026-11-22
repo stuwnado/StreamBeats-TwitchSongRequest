@@ -137,6 +137,7 @@ O `.gitignore` já impede que `tokens.json`, `config.json`, `fila.json` e `regis
 | `tokens.json` | os logins do Spotify e da Twitch. **Não mande para ninguém.** Se apagar, é só conectar de novo |
 | `registro.log` | tudo que aconteceu. Mande esse arquivo quando for pedir ajuda com algum problema |
 | `tocando_agora.txt` | a música atual, para o OBS |
+| `config.json.bak` e `fila.json.bak` | cópias de segurança automáticas. Se o arquivo principal estragar (ex.: o PC desligou na hora de salvar), o app usa a cópia sozinho. Também não mande para ninguém |
 | `controle.chave` | a chave dos atalhos do Stream Deck (troca sozinha toda vez que o app abre) |
 | `Atalhos pro Stream Deck` | a pasta com os atalhos, criada pelo botão **Criar atalhos** |
 

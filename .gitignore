@@ -2,6 +2,9 @@
 tokens.json
 config.json
 fila.json
+# cópias de segurança deles (.bak, .tmp, .corrompido)
+config.json.*
+fila.json.*
 registro.log
 tocando_agora.txt
 

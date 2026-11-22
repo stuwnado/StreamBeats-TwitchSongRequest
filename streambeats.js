@@ -192,8 +192,91 @@ const linkSpotify = (uri) => 'https://open.spotify.com/track/' + String(uri).spl
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
 const ID_RECOMPENSA = /^[0-9a-f-]{20,40}$/i;
 
+// Nenhuma chamada ao Spotify ou à Twitch espera mais que isso. Sem esse limite, uma API travada
+// segurava a fila de comandos do chat e o player por até 5 minutos.
+const TEMPO_LIMITE_API_MS = 12000;
+async function buscarComTempo(url, opcoes, quem) {
+  try {
+    return await fetch(url, { ...opcoes, signal: AbortSignal.timeout(TEMPO_LIMITE_API_MS) });
+  } catch (e) {
+    if (e && (e.name === 'TimeoutError' || e.name === 'AbortError')) {
+      const erro = new Error(`${quem} não respondeu a tempo (internet lenta ou fora do ar).`);
+      erro.semResposta = true;
+      throw erro;
+    }
+    throw e;
+  }
+}
+
 function lerJson(arq) {
   return JSON.parse(fs.readFileSync(arq, 'utf8').replace(/^\uFEFF/, ''));
+}
+
+// ---------------------------------------------------------------- grava\u00E7\u00E3o segura (config.json e fila.json)
+// No Windows, antiv\u00EDrus e OneDrive \u00E0s vezes seguram um arquivo por um instante: tenta de novo algumas vezes.
+const ARQUIVO_OCUPADO = ['EBUSY', 'EPERM', 'EACCES'];
+const pausaCurta = (ms) => { try { Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms); } catch { /* sem pausa */ } };
+function tentarVariasVezes(fn) {
+  for (let tentativa = 1; ; tentativa++) {
+    try {
+      return fn();
+    } catch (e) {
+      if (tentativa >= 5 || !ARQUIVO_OCUPADO.includes(e.code)) throw e;
+      pausaCurta(40 * tentativa);
+    }
+  }
+}
+// Escreve num .tmp e s\u00F3 no fim troca pelo arquivo de verdade: se o PC desligar no meio, o arquivo antigo continua inteiro.
+// De quebra, guarda uma c\u00F3pia de seguran\u00E7a (.bak) do arquivo anterior, no m\u00E1ximo uma vez por minuto.
+const ultimoBackup = new Map();
+function gravarSeguro(arq, texto) {
+  const tmp = arq + '.tmp';
+  tentarVariasVezes(() => fs.writeFileSync(tmp, texto));
+  if (Date.now() - (ultimoBackup.get(arq) || 0) > 60000) {
+    ultimoBackup.set(arq, Date.now());
+    try {
+      lerJson(arq); // s\u00F3 copia se o atual estiver bom (nunca troca uma c\u00F3pia boa por um arquivo estragado)
+      fs.copyFileSync(arq, arq + '.bak');
+    } catch { /* ainda n\u00E3o existe, est\u00E1 estragado ou em uso: fica a c\u00F3pia anterior */ }
+  }
+  try {
+    tentarVariasVezes(() => fs.renameSync(tmp, arq));
+  } catch (e) {
+    if (!ARQUIVO_OCUPADO.includes(e.code)) throw e;
+    // o Windows n\u00E3o deixou trocar o nome: grava direto (como antes), pra n\u00E3o perder a mudan\u00E7a
+    tentarVariasVezes(() => fs.writeFileSync(arq, texto));
+    try { fs.rmSync(tmp, { force: true }); } catch { /* fica pra pr\u00F3xima */ }
+  }
+}
+// L\u00EA config.json ou fila.json. Se estiver estragado, guarda uma c\u00F3pia dele (.corrompido) e usa a c\u00F3pia de seguran\u00E7a (.bak),
+// em vez de trocar tudo pelos valores padr\u00E3o. Se estiver travado por outro programa e n\u00E3o houver c\u00F3pia, avisa o erro sem mexer nele.
+function lerJsonComBackup(arq, nome) {
+  const valido = (d) => !!d && typeof d === 'object' && !Array.isArray(d);
+  let erroLeitura = null;
+  try {
+    const d = JSON.parse(tentarVariasVezes(() => fs.readFileSync(arq, 'utf8')).replace(/^\uFEFF/, ''));
+    if (valido(d)) return { dados: d, doBackup: false };
+    throw new SyntaxError('conte\u00FAdo inv\u00E1lido');
+  } catch (e) {
+    if (e instanceof SyntaxError) {
+      log(`\u26A0\uFE0F O ${nome} estava estragado. Uma c\u00F3pia dele ficou guardada como ${nome}.corrompido.`);
+      try { fs.copyFileSync(arq, arq + '.corrompido'); } catch { /* segue mesmo assim */ }
+    } else {
+      erroLeitura = e;
+    }
+  }
+  try {
+    const d = lerJson(arq + '.bak');
+    if (valido(d)) {
+      log(`\u267B\uFE0F Usei a c\u00F3pia de seguran\u00E7a (${nome}.bak). Pode faltar s\u00F3 alguma mudan\u00E7a do \u00FAltimo minuto.`);
+      return { dados: d, doBackup: true };
+    }
+  } catch { /* sem c\u00F3pia boa */ }
+  if (erroLeitura) {
+    throw new Error(`N\u00E3o consegui abrir o ${nome} (${erroLeitura.code || erroLeitura.message}). Feche programas que possam estar usando esse arquivo e abra o StreamBeats de novo.`);
+  }
+  log(`\u26A0\uFE0F N\u00E3o havia c\u00F3pia de seguran\u00E7a do ${nome}: come\u00E7ando com os valores padr\u00E3o.`);
+  return null;
 }
 function salvarTokens() {
   fs.writeFileSync(ARQ_TOKENS, JSON.stringify(tokens, null, 2));
@@ -309,22 +392,16 @@ function normalizarConfig(c) {
 }
 
 function carregarConfig() {
-  let c = {};
   const existia = fs.existsSync(ARQ_CONFIG);
-  if (existia) {
-    try {
-      c = lerJson(ARQ_CONFIG);
-    } catch (e) {
-      log('⚠️ O config.json estava com erro e foi ignorado: ' + e.message);
-    }
-  }
-  cfg = normalizarConfig(c);
+  // estragado: usa a cópia de segurança; travado sem cópia: o app para com um aviso, sem apagar as configurações
+  const lido = existia ? lerJsonComBackup(ARQ_CONFIG, 'config.json') : null;
+  cfg = normalizarConfig(lido ? lido.dados : {});
   // instalação nova: tudo é novidade, então a janela de "Novidades" só aparece na próxima versão
   if (!existia) cfg.ultima_versao_vista = VERSAO;
   salvarConfig();
 }
 function salvarConfig() {
-  fs.writeFileSync(ARQ_CONFIG, JSON.stringify(cfg, null, 2));
+  gravarSeguro(ARQ_CONFIG, JSON.stringify(cfg, null, 2));
 }
 
 async function aplicarConfig(novo) {
@@ -347,21 +424,30 @@ async function aplicarConfig(novo) {
 // ---------------------------------------------------------------- fila salva no disco
 function salvarFila() {
   try {
-    fs.writeFileSync(ARQ_FILA, JSON.stringify({ pedidos, pendentes, historico }, null, 2));
+    gravarSeguro(ARQ_FILA, JSON.stringify({ pedidos, pendentes, historico }, null, 2));
   } catch (e) {
     log('⚠️ Não consegui salvar a fila: ' + e.message);
   }
 }
 function carregarFila() {
   if (!fs.existsSync(ARQ_FILA)) return;
+  let lido;
   try {
-    const d = lerJson(ARQ_FILA);
+    lido = lerJsonComBackup(ARQ_FILA, 'fila.json');
+  } catch (e) {
+    log('⚠️ ' + e.message);
+    return;
+  }
+  if (!lido) return;
+  try {
+    const d = lido.dados;
     const ok = (p) => p && typeof p.uri === 'string' && typeof p.titulo === 'string';
     pedidos = (Array.isArray(d.pedidos) ? d.pedidos : []).filter(ok);
     pendentes = (Array.isArray(d.pendentes) ? d.pendentes : []).filter(ok);
     if (d.historico && Array.isArray(d.historico.faixas)) historico = { desde: d.historico.desde || null, faixas: d.historico.faixas.filter(ok) };
     proximoId = Math.max(0, ...[...pedidos, ...pendentes].map((p) => Number(p.id) || 0)) + 1;
     if (pedidos.length || pendentes.length) log(`📂 Fila recuperada: ${pedidos.length} pedido(s)` + (pendentes.length ? ` e ${pendentes.length} esperando aprovação` : '') + '.');
+    if (lido.doBackup) salvarFila(); // o fila.json estava estragado: grava ele de novo a partir da cópia de segurança
   } catch (e) {
     log('⚠️ O fila.json estava com erro e foi ignorado: ' + e.message);
   }
@@ -394,11 +480,11 @@ function linkLoginSpotify() {
 }
 
 async function pedirTokenSpotify(params) {
-  const r = await fetch('https://accounts.spotify.com/api/token', {
+  const r = await buscarComTempo('https://accounts.spotify.com/api/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams(params),
-  });
+  }, 'O Spotify');
   const d = await r.json().catch(() => ({}));
   if (!r.ok) {
     const e = new Error(d.error_description || d.error || `HTTP ${r.status}`);
@@ -459,11 +545,11 @@ async function spotify(metodo, rota, opcoes, jaTentou) {
   for (const [k, v] of Object.entries(params || {})) url.searchParams.set(k, v);
   const headers = { Authorization: 'Bearer ' + tokens.spotify.access_token };
   if (corpo) headers['Content-Type'] = 'application/json';
-  const r = await fetch(url, {
+  const r = await buscarComTempo(url, {
     method: metodo,
     headers,
     body: metodo === 'GET' ? undefined : (corpo ? JSON.stringify(corpo) : ''),
-  });
+  }, 'O Spotify');
   if (r.status === 401 && !jaTentou) {
     tokens.spotify.expires_at = 0;
     return spotify(metodo, rota, opcoes, true);
@@ -805,6 +891,7 @@ async function aoTrocarMusica(item) {
 }
 
 let atualizando = false;
+let ultimaReconferenciaSpotify = 0;
 async function atualizarPlayer() {
   if (!spotifyConectado() || atualizando || Date.now() < pausaSpotifyAte) return;
   atualizando = true;
@@ -814,6 +901,12 @@ async function atualizarPlayer() {
       player = await spotify('GET', '/me/player', { params: { market: 'from_token' } });
     } catch {
       return;
+    }
+    // O app abriu sem internet (ou o Spotify estava fora do ar) e o player voltou a responder:
+    // confere a conta de novo pro painel sair de "Desconectado" sozinho (no máximo uma vez a cada 30s).
+    if (!estado.spotify.conectado && Date.now() - ultimaReconferenciaSpotify > 30000) {
+      ultimaReconferenciaSpotify = Date.now();
+      await verificarSpotify();
     }
     const dev = player && player.device;
     estado.spotify.aparelho = dev ? dev.name : null;
@@ -852,7 +945,7 @@ async function infoTwitch() {
   const t = tokens.twitch;
   if (!t || !t.access_token || t.client_id !== cfg.twitch_client_id) return null;
   try {
-    const r = await fetch('https://id.twitch.tv/oauth2/validate', { headers: { Authorization: 'OAuth ' + t.access_token } });
+    const r = await buscarComTempo('https://id.twitch.tv/oauth2/validate', { headers: { Authorization: 'OAuth ' + t.access_token } }, 'A Twitch');
     if (r.status === 401) {
       delete tokens.twitch;
       salvarTokens();
@@ -875,11 +968,11 @@ const temRecompensasApi = () => TIPOS_RECOMPENSA.some((k) => cfg.recompensas_api
 async function helix(metodo, rota, params, corpo) {
   const url = new URL('https://api.twitch.tv/helix' + rota);
   for (const [k, v] of Object.entries(params || {})) url.searchParams.set(k, v);
-  const r = await fetch(url, {
+  const r = await buscarComTempo(url, {
     method: metodo,
     headers: { 'Client-Id': cfg.twitch_client_id, Authorization: 'Bearer ' + tokens.twitch.access_token, 'Content-Type': 'application/json' },
     body: corpo ? JSON.stringify(corpo) : undefined,
-  });
+  }, 'A Twitch');
   const texto = await r.text();
   let d = null;
   try { d = texto ? JSON.parse(texto) : null; } catch { /* sem JSON */ }
@@ -907,6 +1000,7 @@ function corpoRecompensa(qual) {
   return { ...base, prompt: 'Nome da música - artista (ou link do Spotify)', is_user_input_required: true, background_color: qual === 'pedido' ? '#9147FF' : '#FFB31A' };
 }
 function traduzirErroRecompensa(e) {
+  if (e.semResposta) return e; // "a Twitch não respondeu a tempo" já está claro
   const m = String(e.message || '');
   if (/partner|affiliate/i.test(m)) return new Error('O canal precisa ser Afiliado ou Parceiro da Twitch para ter pontos do canal.');
   if (/duplicate/i.test(m)) return new Error('Já existe uma recompensa com esse nome no canal. Apague ou renomeie ela na Twitch e tente de novo.');
@@ -1124,20 +1218,35 @@ function parseIrc(linha) {
   return { tags, prefixo, comando, params: partes, final };
 }
 
+// Vigia do chat: se nada chegar por 1 minuto, o app pergunta "está aí?" (PING);
+// se ficar 2,5 minutos sem nada, a conexão morreu sem avisar (roteador reiniciou, internet caiu e voltou) e é refeita.
+const CHAT_PING_MS = 60000;
+const CHAT_MORTO_MS = 150000;
+// Controle de taxa das respostas do bot: no máximo 18 a cada 30s (a Twitch bloqueia contas comuns acima de 20).
+const CHAT_LIMITE_MSGS = 18;
+const CHAT_JANELA_MS = 30000;
+const CHAT_MAX_ESPERANDO = 15; // em raid, guarda até 15 respostas esperando a vez; as que passarem disso são puladas
+const CHAT_VALIDADE_MS = 60000; // resposta que esperou mais de 1 minuto já não faz sentido: é descartada
+const CHAT_RESPIRO_MS = 350; // espaço mínimo entre uma resposta e outra
+
 function conectarTwitch(canal, aoMensagem, login, token, aoStatus) {
   let sock = null;
   let parado = false;
   let buffer = '';
   let conectado = false;
+  let ultimoDado = 0; // quando chegou a última coisa do chat (mensagem, PING, PONG...)
   const status = (v) => { conectado = v; if (aoStatus) aoStatus(v, login); };
   const enviar = (l) => { if (sock && !sock.destroyed) sock.write(l + '\r\n'); };
 
   function conectar() {
     if (parado) return;
     buffer = '';
-    sock = tls.connect({ host: 'irc.chat.twitch.tv', port: 6697, servername: 'irc.chat.twitch.tv' });
-    sock.setEncoding('utf8');
-    sock.on('secureConnect', () => {
+    ultimoDado = Date.now();
+    const este = tls.connect({ host: 'irc.chat.twitch.tv', port: 6697, servername: 'irc.chat.twitch.tv' });
+    sock = este;
+    este.setEncoding('utf8');
+    este.setKeepAlive(true, 60000);
+    este.on('secureConnect', () => {
       enviar('CAP REQ :twitch.tv/tags twitch.tv/commands');
       if (login && token) {
         enviar('PASS oauth:' + token);
@@ -1147,19 +1256,57 @@ function conectarTwitch(canal, aoMensagem, login, token, aoStatus) {
       }
       enviar('JOIN #' + canal);
     });
-    sock.on('data', (pedaco) => {
+    este.on('data', (pedaco) => {
+      ultimoDado = Date.now();
       buffer += pedaco;
       const linhas = buffer.split('\r\n');
       buffer = linhas.pop();
       for (const l of linhas) if (l) tratar(l);
     });
-    sock.on('error', (e) => log('Erro na conexão com o chat da Twitch: ' + e.message));
-    sock.on('close', () => {
-      if (parado) return;
+    este.on('error', (e) => log('Erro na conexão com o chat da Twitch: ' + e.message));
+    este.on('close', () => {
+      if (parado || este !== sock) return; // conexão velha: só a atual pode agendar a reconexão (nunca duas ao mesmo tempo)
       if (conectado) log('🔌 Desconectado do chat. Tentando de novo em 5 segundos...');
       status(false);
       setTimeout(conectar, 5000);
     });
+  }
+
+  const vigia = setInterval(() => {
+    if (parado || !sock || sock.destroyed) return; // já está reconectando
+    const mudo = Date.now() - ultimoDado;
+    if (mudo >= CHAT_MORTO_MS) {
+      log('🔌 O chat da Twitch parou de responder. Reconectando...');
+      sock.destroy(); // o 'close' acima agenda a reconexão (uma só)
+    } else if (conectado && mudo >= CHAT_PING_MS) {
+      enviar('PING :tmi.twitch.tv'); // a Twitch responde PONG, e isso conta como "está vivo"
+    }
+  }, 30000);
+
+  // Respostas do bot esperando a vez (controle de taxa)
+  const esperando = []; // { linha, quando }
+  const enviadas = []; // horário das últimas respostas mandadas
+  let timerEnvio = null;
+  let ultimoEnvio = 0;
+  let ultimoAvisoCheio = 0;
+  function despachar() {
+    timerEnvio = null;
+    if (parado || !login) { esperando.length = 0; return; }
+    const agora = Date.now();
+    while (esperando.length && agora - esperando[0].quando > CHAT_VALIDADE_MS) esperando.shift();
+    if (!esperando.length) return;
+    while (enviadas.length && agora - enviadas[0] >= CHAT_JANELA_MS) enviadas.shift();
+    let espera = 0;
+    if (!conectado || !sock || sock.destroyed) espera = 2000; // reconectando: manda quando voltar
+    else if (enviadas.length >= CHAT_LIMITE_MSGS) espera = CHAT_JANELA_MS - (agora - enviadas[0]) + 50; // limite: espera abrir vaga
+    else if (agora - ultimoEnvio < CHAT_RESPIRO_MS) espera = CHAT_RESPIRO_MS - (agora - ultimoEnvio); // um respiro entre respostas
+    else {
+      enviar(esperando.shift().linha);
+      enviadas.push(agora);
+      ultimoEnvio = agora;
+      if (esperando.length) espera = CHAT_RESPIRO_MS;
+    }
+    if (espera) timerEnvio = setTimeout(despachar, espera);
   }
 
   function tratar(linha) {
@@ -1210,10 +1357,25 @@ function conectarTwitch(canal, aoMensagem, login, token, aoStatus) {
     get podeFalar() { return !!login; },
     falar(texto, idResposta) {
       if (!login) return;
+      if (esperando.length >= CHAT_MAX_ESPERANDO) {
+        if (Date.now() - ultimoAvisoCheio > CHAT_JANELA_MS) {
+          ultimoAvisoCheio = Date.now();
+          log('⚠️ Muitas respostas pro chat ao mesmo tempo (raid?): algumas foram puladas pra não estourar o limite da Twitch.');
+        }
+        return;
+      }
       const limpo = String(texto).replace(/[\r\n]+/g, ' ').slice(0, 450);
-      enviar((idResposta ? `@reply-parent-msg-id=${idResposta} ` : '') + `PRIVMSG #${canal} :${limpo}`);
+      esperando.push({ linha: (idResposta ? `@reply-parent-msg-id=${idResposta} ` : '') + `PRIVMSG #${canal} :${limpo}`, quando: Date.now() });
+      if (!timerEnvio) despachar();
     },
-    parar() { parado = true; if (sock) sock.destroy(); },
+    parar() {
+      parado = true;
+      clearInterval(vigia);
+      clearTimeout(timerEnvio);
+      timerEnvio = null;
+      esperando.length = 0;
+      if (sock) sock.destroy();
+    },
   };
 }
 
@@ -1223,11 +1385,16 @@ function enfileirarMensagem(m) {
   filaDeMensagens = filaDeMensagens.then(() => aoMensagem(m)).catch((e) => log('❗ ' + e.message));
 }
 
+let geracaoChat = 0; // cada reconexão ganha um número; se outra começar no meio, só a mais nova conecta
 async function reconectarChat() {
+  const minha = ++geracaoChat;
   if (irc) { irc.parar(); irc = null; }
   estado.chat = { conectado: false, canal: cfg.canal_twitch || null, respondendoComo: null };
   estado.aoVivo = null;
-  estado.twitch = cfg.twitch_client_id ? await infoTwitch() : null;
+  const info = cfg.twitch_client_id ? await infoTwitch() : null;
+  // outra reconexão começou enquanto esta esperava a Twitch: ela é que conecta (nunca dois chats ao mesmo tempo)
+  if (minha !== geracaoChat) return;
+  estado.twitch = info;
   atualizarEventSub();
   if (!cfg.canal_twitch) return;
   const login = cfg.responder_no_chat && estado.twitch ? estado.twitch.login : null;
@@ -1246,6 +1413,23 @@ async function verificarAoVivo() {
     estado.aoVivo = !!(d && Array.isArray(d.data) && d.data.some((s) => s.type === 'live'));
   } catch {
     // sem internet ou a Twitch não respondeu: fica como estava e tenta de novo daqui a pouco
+  }
+}
+
+// O app abriu sem internet (ou a Twitch estava fora do ar): o chat volta sozinho, mas só lendo.
+// Quando a Twitch voltar a responder, entra de novo com o login salvo (respostas, pontos e "ao vivo" voltam).
+let recuperandoTwitch = false;
+async function recuperarTwitch() {
+  const t = tokens.twitch;
+  if (recuperandoTwitch || estado.twitch || !cfg.twitch_client_id || !t || t.client_id !== cfg.twitch_client_id) return false;
+  recuperandoTwitch = true;
+  try {
+    if (!(await infoTwitch())) return false; // ainda sem resposta (ou o login venceu): tenta de novo depois
+    log('🔄 A Twitch voltou a responder. Entrando de novo com o seu login...');
+    await reconectarChat();
+    return true;
+  } finally {
+    recuperandoTwitch = false;
   }
 }
 
@@ -1277,9 +1461,16 @@ async function reverificarTwitch() {
   if (estado.chat.conectado) {
     // o chat já está funcionando: só confere o login, sem derrubar a conexão
     if (tinhaLogin) {
-      const info = await infoTwitch();
-      if (info) estado.twitch = info;
+      if (!estado.twitch) {
+        // o app abriu sem internet e ficou só lendo o chat: entra com o login agora
+        await recuperarTwitch();
+        for (let i = 0; i < 24 && !estado.chat.conectado; i++) await esperar(250);
+      } else {
+        const info = await infoTwitch();
+        if (info) estado.twitch = info;
+      }
       if (!tokens.twitch) { await reconectarChat(); return { conectado: false, mensagem: 'O login da Twitch não vale mais. Entre de novo na Sincronização.' }; }
+      if (!estado.twitch) return { conectado: true, mensagem: '⚠️ O chat está conectado, mas a Twitch não confirmou o seu login agora (internet?). O app tenta de novo sozinho.' };
     }
   } else {
     await reconectarChat();
@@ -2149,6 +2340,7 @@ async function main() {
   await reconectarChat();
   setInterval(atualizarPlayer, INTERVALO_MS);
   setInterval(verificarAoVivo, 60000); // a live está no ar? (confere a cada minuto)
+  setInterval(recuperarTwitch, 30000); // abriu sem internet? quando a Twitch voltar, entra com o login de novo
   if (GITHUB_REPO) {
     setTimeout(() => procurarAtualizacao(), 10000);
     setInterval(() => procurarAtualizacao(), 6 * 3600000);
@@ -2172,5 +2364,9 @@ module.exports = {
     definirHelix: (fn) => { helix = fn; }, // eslint-disable-line no-func-assign
     get tocandoAgora() { return tocandoAgora; }, get historico() { return historico; },
     get earrapeAte() { return earrapeAte; },
+    // correções da revisão (vigia do chat, tempo limite, recuperação, gravação segura)
+    atualizarPlayer, verificarSpotify, reconectarChat, recuperarTwitch, reverificarTwitch,
+    gravarSeguro, lerJsonComBackup, carregarConfig, carregarFila,
+    get cfg() { return cfg; }, get irc() { return irc; },
   },
 };
