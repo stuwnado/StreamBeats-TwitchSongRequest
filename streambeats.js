@@ -23,7 +23,7 @@ let sea = null;
 try { sea = require('node:sea'); } catch { /* Node antigo */ }
 const EH_EXE = !!(sea && sea.isSea && sea.isSea());
 
-const VERSAO = '1.1.0';
+const VERSAO = '1.1.1';
 // Repositório do GitHub de onde o app baixa atualizações ("usuario/repositorio").
 // Vazio = atualização automática desligada.
 const GITHUB_REPO = 'stuwnado/StreamBeats-TwitchSongRequest';
@@ -66,7 +66,13 @@ const COMANDOS_DECK = {
   earrape: ['Earrape', 'volume'],
 };
 const ENVIAR_QUANDO_FALTAR_MS = 15000; // manda o próximo pedido pro Spotify 15s antes da música acabar
-const INTERVALO_MS = 3000;
+// De quanto em quanto tempo o app pergunta ao Spotify o que está tocando. Desde julho de 2026 o Spotify
+// limita bem mais os apps em modo de desenvolvimento, então o app só pergunta rápido quando precisa.
+const INTERVALO_TOCANDO_MS = 5000; // música tocando
+const INTERVALO_PAUSADO_MS = 10000; // pausado ou sem aparelho ativo
+const INTERVALO_TOCANDO_OFFLINE_MS = 15000; // tocando com a live fora do ar
+const INTERVALO_PAUSADO_OFFLINE_MS = 60000; // pausado com a live fora do ar
+const ESPERAS_BLOQUEIO_SEG = [60, 120, 300, 600, 900]; // bloqueio sem prazo do Spotify: espera cada vez mais
 const TIPOS_RECOMPENSA = ['pedido', 'prioridade', 'earrape'];
 const NOMES_RECOMPENSA = { pedido: 'Pedir música', prioridade: 'Furar fila', earrape: 'Earrape' };
 const NIVEIS = ['desligado', 'mods', 'vips', 'subs', 'todos'];
@@ -144,6 +150,8 @@ let tocandoAgora = null;
 let ultimaUri;
 let aprendendoRecompensa = null; // 'pedido' | 'prioridade' | 'earrape'
 let pausaSpotifyAte = 0;
+let bloqueiosSeguidos = 0; // quantas vezes seguidas o Spotify pediu pra ir mais devagar
+let avisarQuandoVoltar = false;
 let earrapeAte = 0;
 let volumeAntesEarrape = null;
 let ultimoEarrapeChat = 0;
@@ -558,8 +566,21 @@ function garantirTokenSpotify() {
   return renovandoSpotify;
 }
 
+function tempoAte(quando) {
+  const seg = Math.max(1, Math.ceil((quando - Date.now()) / 1000));
+  if (seg < 60) return `${seg} seg`;
+  return `${Math.ceil(seg / 60)} min`;
+}
+
 async function spotify(metodo, rota, opcoes, jaTentou) {
   const { params, json: corpo } = opcoes || {};
+  // Durante a espera que o Spotify pediu, nada vai pra ele (insistir só aumenta o bloqueio).
+  if (Date.now() < pausaSpotifyAte) {
+    const e = new Error(`O Spotify pediu para ir mais devagar. Voltando em ${tempoAte(pausaSpotifyAte)}`);
+    e.status = 429;
+    e.emEspera = true;
+    throw e;
+  }
   await garantirTokenSpotify();
   const url = new URL('https://api.spotify.com/v1' + rota);
   for (const [k, v] of Object.entries(params || {})) url.searchParams.set(k, v);
@@ -577,10 +598,30 @@ async function spotify(metodo, rota, opcoes, jaTentou) {
   const texto = await r.text();
   let dados = null;
   try { dados = texto ? JSON.parse(texto) : null; } catch { /* resposta sem JSON */ }
+  if (r.status === 429) {
+    // Com prazo (Retry-After), espera o que o Spotify mandou. Sem prazo, ou se for o limite total
+    // da conta de desenvolvedor (reason QUOTA_EXCEEDED), espera cada vez mais: 1, 2, 5, 10, 15 min.
+    const prazo = Number(r.headers.get('retry-after'));
+    const cota = !!(dados && dados.error && dados.error.reason === 'QUOTA_EXCEEDED');
+    bloqueiosSeguidos++;
+    const escada = ESPERAS_BLOQUEIO_SEG[Math.min(bloqueiosSeguidos, ESPERAS_BLOQUEIO_SEG.length) - 1];
+    const seg = prazo > 0 && !cota ? prazo : Math.max(prazo > 0 ? prazo : 0, escada);
+    pausaSpotifyAte = Date.now() + seg * 1000;
+    avisarQuandoVoltar = true;
+    const motivo = cota ? 'o app chegou no limite de uso do Spotify' : 'muitos pedidos seguidos';
+    log(`⚠️ O Spotify pediu para ir mais devagar (${motivo}). O app espera ${tempoAte(pausaSpotifyAte)} e tenta de novo sozinho.`);
+    const e = new Error(`O Spotify pediu para ir mais devagar (${motivo}). Voltando em ${tempoAte(pausaSpotifyAte)}`);
+    e.status = 429;
+    e.cota = cota;
+    throw e;
+  }
+  if (r.ok) {
+    bloqueiosSeguidos = 0;
+    if (avisarQuandoVoltar) { avisarQuandoVoltar = false; log('✅ O Spotify voltou a responder.'); }
+  }
   if (!r.ok) {
-    if (r.status === 429) pausaSpotifyAte = Date.now() + (Number(r.headers.get('retry-after')) || 30) * 1000;
     const msg = (dados && dados.error && (dados.error.message || dados.error)) || texto || `HTTP ${r.status}`;
-    const e = new Error(r.status === 429 ? 'O Spotify pediu para ir mais devagar (muitos pedidos seguidos)' : String(msg));
+    const e = new Error(String(msg));
     e.status = r.status;
     throw e;
   }
@@ -600,7 +641,7 @@ async function verificarSpotify() {
   } catch (e) {
     estado.spotify.conectado = false;
     estado.spotify.erro = e.message;
-    if (!e.semLogin) log('⚠️ Problema com o Spotify: ' + e.message);
+    if (!e.semLogin && e.status !== 429) log('⚠️ Problema com o Spotify: ' + e.message); // o 429 já foi avisado
   }
 }
 
@@ -956,6 +997,28 @@ async function atualizarPlayer() {
   } finally {
     atualizando = false;
   }
+}
+
+// Quanto esperar até a próxima pergunta ao Spotify: rápido só quando a música está tocando,
+// e acordando na hora certa de mandar o próximo pedido e logo depois que a música acaba.
+function proximaConsultaMs() {
+  const offline = estado.aoVivo === false;
+  const pl = estado.player;
+  if (!pl || !pl.tocando) return offline ? INTERVALO_PAUSADO_OFFLINE_MS : INTERVALO_PAUSADO_MS;
+  let ms = offline ? INTERVALO_TOCANDO_OFFLINE_MS : INTERVALO_TOCANDO_MS;
+  const resta = pl.duracao - (pl.progresso + (Date.now() - pl.quando));
+  const temPraMandar = pedidos.length > 0 && !pedidos.some((p) => p.enviado);
+  if (temPraMandar && resta > ENVIAR_QUANDO_FALTAR_MS) ms = Math.min(ms, resta - ENVIAR_QUANDO_FALTAR_MS + 300);
+  if (resta > 0) ms = Math.min(ms, resta + 800);
+  return Math.max(1000, ms);
+}
+
+let timerPlayer = null;
+async function cicloDoPlayer() {
+  try { await atualizarPlayer(); } catch { /* o próximo ciclo tenta de novo */ }
+  const espera = pausaSpotifyAte - Date.now();
+  clearTimeout(timerPlayer);
+  timerPlayer = setTimeout(cicloDoPlayer, espera > 0 ? espera + 500 : proximaConsultaMs());
 }
 
 // ---------------------------------------------------------------- Twitch: login (opcional)
@@ -2449,7 +2512,7 @@ async function main() {
 
   if (spotifyConectado()) await verificarSpotify();
   await reconectarChat();
-  setInterval(atualizarPlayer, INTERVALO_MS);
+  cicloDoPlayer(); // pergunta ao Spotify o que está tocando, no ritmo de proximaConsultaMs()
   setInterval(verificarAoVivo, 60000); // a live está no ar? (confere a cada minuto)
   setInterval(recuperarTwitch, 30000); // abriu sem internet? quando a Twitch voltar, entra com o login de novo
   setInterval(conferirLoginTwitch, 3600000); // a Twitch exige conferir o login de hora em hora (o da abertura é feito ao conectar o chat)
@@ -2486,5 +2549,8 @@ module.exports = {
     // as 3 últimas lives
     get livesAnteriores() { return livesAnteriores; }, definirLivesAnteriores: (l) => { livesAnteriores = l; },
     separarSeFoiOutraLive, criarPlaylist, separarEmLives,
+    // menos consultas ao Spotify e espera depois do bloqueio
+    proximaConsultaMs, chamarSpotify: (...a) => spotify(...a),
+    get pausaSpotifyAte() { return pausaSpotifyAte; }, definirPausaSpotify: (t, zerar = true) => { pausaSpotifyAte = t; if (zerar) bloqueiosSeguidos = 0; },
   },
 };

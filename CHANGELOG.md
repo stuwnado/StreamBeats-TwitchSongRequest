@@ -2,6 +2,13 @@
 
 O que mudou em cada versão, em poucas palavras.
 
+## v1.1.1 (2026-11-22)
+
+Correção do erro "O Spotify pediu para ir mais devagar".
+
+- O app pergunta ao Spotify o que está tocando com menos frequência, principalmente com a música pausada ou a live fora do ar. O Spotify passou a limitar bem mais os apps desse tipo.
+- Se o Spotify pedir pra esperar, o app espera o tempo certo e volta sozinho, sem ficar insistindo. O registro avisa quando o Spotify volta.
+
 ## v1.1.0 (2026-11-22)
 
 Painel novo, mais limpo, e controle pelo Stream Deck.
