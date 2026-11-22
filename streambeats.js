@@ -23,18 +23,21 @@ let sea = null;
 try { sea = require('node:sea'); } catch { /* Node antigo */ }
 const EH_EXE = !!(sea && sea.isSea && sea.isSea());
 
-const VERSAO = '1.0.2';
+const VERSAO = '1.1.0';
 // Repositório do GitHub de onde o app baixa atualizações ("usuario/repositorio").
 // Vazio = atualização automática desligada.
 const GITHUB_REPO = 'stuwnado/StreamBeats-TwitchSongRequest';
 
-const PASTA = process.env.STREAMBEATS_PASTA || (EH_EXE ? path.dirname(process.execPath) : __dirname);
+// --pasta= e --porta= servem pros atalhos do Stream Deck acharem o StreamBeats certo
+const argumento = (nome) => { const a = process.argv.find((x) => x.startsWith(`--${nome}=`)); return a ? a.slice(nome.length + 3) : null; };
+const PASTA = argumento('pasta') || process.env.STREAMBEATS_PASTA || (EH_EXE ? path.dirname(process.execPath) : __dirname);
 const ARQ_CONFIG = path.join(PASTA, 'config.json');
 const ARQ_TOKENS = path.join(PASTA, 'tokens.json');
 const ARQ_FILA = path.join(PASTA, 'fila.json');
 const ARQ_TOCANDO = path.join(PASTA, 'tocando_agora.txt');
 const ARQ_LOG = path.join(PASTA, 'registro.log');
-const PORTA = Number(process.env.STREAMBEATS_PORTA) || 8888; // outra porta só para testes
+const ARQ_CONTROLE = path.join(PASTA, 'controle.chave'); // chave dos atalhos do Stream Deck
+const PORTA = Number(argumento('porta')) || Number(process.env.STREAMBEATS_PORTA) || 8888; // outra porta só para testes
 const URL_PAINEL = `http://127.0.0.1:${PORTA}/`;
 const URL_OVERLAY = `http://127.0.0.1:${PORTA}/overlay`;
 const SPOTIFY_REDIRECT = `http://127.0.0.1:${PORTA}/spotify`;
@@ -50,6 +53,18 @@ const SPOTIFY_SCOPES = [
 const TWITCH_ESCOPOS_CHAT = ['chat:read', 'chat:edit'];
 const TWITCH_ESCOPOS_PONTOS = ['channel:read:redemptions', 'channel:manage:redemptions'];
 const CHAVE = crypto.randomBytes(18).toString('hex'); // protege o painel contra outros sites
+const CHAVE_CONTROLE = crypto.randomBytes(18).toString('hex'); // protege os comandos do Stream Deck
+// Comandos que um Stream Deck (Fifine, Elgato...) pode mandar: id -> [nome do atalho, ícone]
+const COMANDOS_DECK = {
+  'tocar-pausar': ['Tocar ou pausar', 'play'],
+  pular: ['Pular música', 'pular'],
+  voltar: ['Voltar música', 'voltar'],
+  banir: ['Banir a música atual', 'ban'],
+  pedidos: ['Abrir ou fechar pedidos', 'lista'],
+  'volume-mais': ['Volume +10', 'volume'],
+  'volume-menos': ['Volume -10', 'volume'],
+  earrape: ['Earrape', 'volume'],
+};
 const ENVIAR_QUANDO_FALTAR_MS = 15000; // manda o próximo pedido pro Spotify 15s antes da música acabar
 const INTERVALO_MS = 3000;
 const TIPOS_RECOMPENSA = ['pedido', 'prioridade', 'earrape'];
@@ -64,25 +79,29 @@ const CONFIG_PADRAO = {
   spotify_client_id: '',
   responder_no_chat: false,
   twitch_client_id: '',
-  cooldown_segundos: 30,
-  max_pedidos_por_pessoa: 3,
+  // Padrões de quem instala pela primeira vez. Quem já usa o app não é afetado:
+  // o config.json dele já guarda todos os valores, e eles sempre ganham destes.
+  cooldown_segundos: 5,
+  max_pedidos_por_pessoa: 1,
   max_pedidos_subs: 5,
   max_fila_total: 30,
   duracao_maxima_minutos: 8,
-  votos_para_pular: 5,
+  votos_para_pular: 3,
   bloquear_explicitas: false,
   somente_subs_e_vips: false,
   aprovar_pedidos: false,
+  esconder_overlay_pausado: true,
   palavras_bloqueadas: [],
-  palavras_alerta: ['gemidão', 'gemidao', 'earrape', 'ear rape', 'bass boosted', 'rickroll', '10 hours', '10 horas', '1 hour', '1 hora'],
+  palavras_alerta: [],
   usuarios_bloqueados: [],
   musicas_banidas: [],
   permissao_volume: 'mods',
   volume_max_chat: 80,
-  permissao_extras: 'mods',
-  earrape_segundos: 10,
-  earrape_espera_minutos: 10,
-  furarfila_espera_minutos: 10,
+  permissao_extras: 'subs',
+  earrape_segundos: 3,
+  earrape_espera_minutos: 5,
+  furarfila_espera_minutos: 0,
+  ultima_versao_vista: '', // última versão cuja janela de "Novidades" o streamer já viu
   recompensa_pedido_id: '',
   recompensa_prioridade_id: '',
   recompensa_earrape_id: '',
@@ -131,6 +150,7 @@ const estado = {
   spotify: { conectado: false, usuario: null, premium: null, aparelho: null, volume: null, suportaVolume: false, erro: null },
   chat: { conectado: false, canal: null, respondendoComo: null },
   twitch: null, // {login, userId, scopes}
+  aoVivo: null, // true = live no ar · false = offline · null = não dá pra saber (sem login da Twitch)
   eventsub: false,
   player: null, // {tocando, progresso, duracao, quando}
   atualizacao: null, // {versao, nova, notas, urlExe, urlSha, pagina, erro}
@@ -190,8 +210,9 @@ function abrirPainel() {
       'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
     ].find((p) => fs.existsSync(p));
     if (edge) {
-      // modo "app": abre como uma janela de programa, sem barra de endereço
-      spawn(edge, ['--app=' + URL_PAINEL, '--window-size=640,820'], { detached: true, stdio: 'ignore' }).unref();
+      // modo "app": abre como uma janela de programa, sem barra de endereço.
+      // Tamanho fixo de 900 x 650: o próprio painel puxa a janela de volta se alguém mudar o tamanho.
+      spawn(edge, ['--app=' + URL_PAINEL, '--window-size=900,650'], { detached: true, stdio: 'ignore' }).unref();
       return;
     }
   }
@@ -247,19 +268,21 @@ function normalizarConfig(c) {
   if (!/^[0-9a-f]{32}$/i.test(n.spotify_client_id)) n.spotify_client_id = '';
   n.twitch_client_id = String(n.twitch_client_id || '').trim();
   if (!/^[0-9a-z]{20,40}$/i.test(n.twitch_client_id)) n.twitch_client_id = '';
-  for (const k of ['responder_no_chat', 'bloquear_explicitas', 'somente_subs_e_vips', 'aprovar_pedidos']) n[k] = !!n[k];
-  n.cooldown_segundos = inteiro(n.cooldown_segundos, 30, 0, 3600);
-  n.max_pedidos_por_pessoa = inteiro(n.max_pedidos_por_pessoa, 3, 1, 100);
-  n.max_pedidos_subs = inteiro(n.max_pedidos_subs, 5, 1, 100);
-  n.max_fila_total = inteiro(n.max_fila_total, 30, 1, 500);
-  n.duracao_maxima_minutos = inteiro(n.duracao_maxima_minutos, 8, 0, 120);
-  n.votos_para_pular = inteiro(n.votos_para_pular, 5, 0, 1000);
-  n.volume_max_chat = inteiro(n.volume_max_chat, 80, 0, 100);
-  n.earrape_segundos = inteiro(n.earrape_segundos, 10, 1, 60);
-  n.earrape_espera_minutos = inteiro(n.earrape_espera_minutos, 10, 0, 1440);
-  n.furarfila_espera_minutos = inteiro(n.furarfila_espera_minutos, 10, 0, 1440);
-  n.permissao_volume = ['mods', 'subs', 'todos'].includes(n.permissao_volume) ? n.permissao_volume : 'mods';
-  n.permissao_extras = NIVEIS.includes(n.permissao_extras) ? n.permissao_extras : 'mods';
+  for (const k of ['responder_no_chat', 'bloquear_explicitas', 'somente_subs_e_vips', 'aprovar_pedidos', 'esconder_overlay_pausado']) n[k] = !!n[k];
+  const P = CONFIG_PADRAO; // valor inválido volta pro padrão
+  n.cooldown_segundos = inteiro(n.cooldown_segundos, P.cooldown_segundos, 0, 3600);
+  n.max_pedidos_por_pessoa = inteiro(n.max_pedidos_por_pessoa, P.max_pedidos_por_pessoa, 1, 100);
+  n.max_pedidos_subs = inteiro(n.max_pedidos_subs, P.max_pedidos_subs, 1, 100);
+  n.max_fila_total = inteiro(n.max_fila_total, P.max_fila_total, 1, 500);
+  n.duracao_maxima_minutos = inteiro(n.duracao_maxima_minutos, P.duracao_maxima_minutos, 0, 120);
+  n.votos_para_pular = inteiro(n.votos_para_pular, P.votos_para_pular, 0, 1000);
+  n.volume_max_chat = inteiro(n.volume_max_chat, P.volume_max_chat, 0, 100);
+  n.earrape_segundos = inteiro(n.earrape_segundos, P.earrape_segundos, 1, 60);
+  n.earrape_espera_minutos = inteiro(n.earrape_espera_minutos, P.earrape_espera_minutos, 0, 1440);
+  n.furarfila_espera_minutos = inteiro(n.furarfila_espera_minutos, P.furarfila_espera_minutos, 0, 1440);
+  n.permissao_volume = ['mods', 'subs', 'todos'].includes(n.permissao_volume) ? n.permissao_volume : P.permissao_volume;
+  n.permissao_extras = NIVEIS.includes(n.permissao_extras) ? n.permissao_extras : P.permissao_extras;
+  n.ultima_versao_vista = /^\d+\.\d+\.\d+$/.test(String(n.ultima_versao_vista || '')) ? String(n.ultima_versao_vista) : '';
   n.palavras_bloqueadas = [...new Set(lista(n.palavras_bloqueadas).map(norm).filter(Boolean))];
   n.palavras_alerta = [...new Set(lista(n.palavras_alerta).map(norm).filter(Boolean))];
   n.usuarios_bloqueados = [...new Set(lista(n.usuarios_bloqueados).map((u) => norm(u).replace(/^@/, '')).filter(Boolean))];
@@ -287,7 +310,8 @@ function normalizarConfig(c) {
 
 function carregarConfig() {
   let c = {};
-  if (fs.existsSync(ARQ_CONFIG)) {
+  const existia = fs.existsSync(ARQ_CONFIG);
+  if (existia) {
     try {
       c = lerJson(ARQ_CONFIG);
     } catch (e) {
@@ -295,6 +319,8 @@ function carregarConfig() {
     }
   }
   cfg = normalizarConfig(c);
+  // instalação nova: tudo é novidade, então a janela de "Novidades" só aparece na próxima versão
+  if (!existia) cfg.ultima_versao_vista = VERSAO;
   salvarConfig();
 }
 function salvarConfig() {
@@ -1200,6 +1226,7 @@ function enfileirarMensagem(m) {
 async function reconectarChat() {
   if (irc) { irc.parar(); irc = null; }
   estado.chat = { conectado: false, canal: cfg.canal_twitch || null, respondendoComo: null };
+  estado.aoVivo = null;
   estado.twitch = cfg.twitch_client_id ? await infoTwitch() : null;
   atualizarEventSub();
   if (!cfg.canal_twitch) return;
@@ -1207,6 +1234,62 @@ async function reconectarChat() {
   estado.chat.respondendoComo = login;
   irc = conectarTwitch(cfg.canal_twitch, enfileirarMensagem, login, login ? tokens.twitch.access_token : null,
     (ok, quem) => { estado.chat.conectado = ok; estado.chat.respondendoComo = quem; });
+  verificarAoVivo();
+}
+
+// A live está no ar? Só dá pra saber com o login da Twitch (passo 3); sem ele fica "não sei" (null).
+async function verificarAoVivo() {
+  const t = tokens.twitch;
+  if (!cfg.canal_twitch || !estado.twitch || !t || t.client_id !== cfg.twitch_client_id) { estado.aoVivo = null; return; }
+  try {
+    const d = await helix('GET', '/streams', { user_login: cfg.canal_twitch });
+    estado.aoVivo = !!(d && Array.isArray(d.data) && d.data.some((s) => s.type === 'live'));
+  } catch {
+    // sem internet ou a Twitch não respondeu: fica como estava e tenta de novo daqui a pouco
+  }
+}
+
+// Clique no cartão de status do painel: confere a conexão usando o login que já está salvo.
+// Se o login não valer mais, o painel abre a Sincronização pra conectar de novo.
+async function reverificarSpotify() {
+  if (!spotifyConectado()) return { conectado: false, mensagem: 'O Spotify não está conectado. Conecte na Sincronização.' };
+  try {
+    const eu = await spotify('GET', '/me'); // o acesso é renovado sozinho aqui, como sempre
+    estado.spotify.conectado = true;
+    estado.spotify.erro = null;
+    estado.spotify.usuario = eu.display_name || eu.id;
+    estado.spotify.premium = eu.product ? eu.product === 'premium' : null;
+  } catch (e) {
+    if (e.semLogin || !spotifyConectado() || e.status === 401 || e.status === 403) {
+      return { conectado: false, mensagem: 'O login do Spotify não vale mais. Conecte de novo na Sincronização.' };
+    }
+    return { conectado: true, mensagem: '⚠️ Não consegui falar com o Spotify agora. Confira a internet e tente de novo.' };
+  }
+  await atualizarPlayer();
+  log('🔄 Spotify conferido pelo painel.');
+  if (!estado.spotify.aparelho) return { conectado: true, mensagem: 'Spotify conectado, mas fechado no PC: abra o Spotify e dê play.' };
+  return { conectado: true, mensagem: '✅ Spotify funcionando.' };
+}
+
+async function reverificarTwitch() {
+  if (!cfg.canal_twitch) return { conectado: false, mensagem: 'Falta colocar o canal da Twitch na Sincronização.' };
+  const tinhaLogin = !!(tokens.twitch && tokens.twitch.client_id === cfg.twitch_client_id);
+  if (estado.chat.conectado) {
+    // o chat já está funcionando: só confere o login, sem derrubar a conexão
+    if (tinhaLogin) {
+      const info = await infoTwitch();
+      if (info) estado.twitch = info;
+      if (!tokens.twitch) { await reconectarChat(); return { conectado: false, mensagem: 'O login da Twitch não vale mais. Entre de novo na Sincronização.' }; }
+    }
+  } else {
+    await reconectarChat();
+    if (tinhaLogin && !tokens.twitch) return { conectado: false, mensagem: 'O login da Twitch não vale mais. Entre de novo na Sincronização.' };
+    for (let i = 0; i < 24 && !estado.chat.conectado; i++) await esperar(250);
+  }
+  await verificarAoVivo();
+  log('🔄 Twitch conferida pelo painel.');
+  if (!estado.chat.conectado) return { conectado: false, mensagem: `Não consegui entrar no chat de #${cfg.canal_twitch}. Confira o nome do canal e a internet.` };
+  return { conectado: true, mensagem: `✅ Chat de #${cfg.canal_twitch} conectado${estado.aoVivo ? ' · a live está no ar!' : '.'}` };
 }
 
 // ---------------------------------------------------------------- comandos do chat
@@ -1501,8 +1584,33 @@ async function aplicarAtualizacao() {
 function lerArquivo(nome) {
   return EH_EXE ? Buffer.from(sea.getAsset(nome)) : fs.readFileSync(path.join(__dirname, nome));
 }
+
+// Janela de "Novidades": pega do CHANGELOG.md os tópicos da versão atual.
+let novidadesCache;
+function lerNovidades() {
+  if (novidadesCache !== undefined) return novidadesCache;
+  novidadesCache = null;
+  try {
+    const linhas = lerArquivo('CHANGELOG.md').toString('utf8').split(/\r?\n/);
+    const inicio = linhas.findIndex((l) => l.startsWith(`## v${VERSAO} `) || l.trim() === `## v${VERSAO}`);
+    if (inicio < 0) return null;
+    const itens = [];
+    let resumo = '';
+    for (const l of linhas.slice(inicio + 1)) {
+      if (l.startsWith('## ')) break;
+      const limpa = (s) => s.replace(/\*\*|`/g, '').trim();
+      if (/^\s*[-*] /.test(l)) itens.push(limpa(l.replace(/^\s*[-*] /, '')));
+      else if (!resumo && l.trim()) resumo = limpa(l);
+    }
+    if (itens.length) novidadesCache = { versao: VERSAO, resumo, itens: itens.slice(0, 12) };
+  } catch { /* sem CHANGELOG: sem janela de novidades */ }
+  return novidadesCache;
+}
 function htmlDoPainel() {
-  return lerArquivo('painel.html').toString('utf8').replace('__CHAVE__', CHAVE);
+  // Só para desenvolvimento: STREAMBEATS_PAINEL aponta para um painel de teste (prévia de um visual novo).
+  const teste = !EH_EXE && process.env.STREAMBEATS_PAINEL;
+  const html = teste ? fs.readFileSync(teste) : lerArquivo('painel.html');
+  return html.toString('utf8').replace('__CHAVE__', CHAVE);
 }
 
 const ARQUIVOS_PUBLICOS = {
@@ -1569,6 +1677,7 @@ function estadoParaPainel() {
       temEscopos: temEscoposPontos(),
       podeApi: podeUsarApiPontos(),
       eventsub: !!estado.eventsub,
+      aoVivo: estado.aoVivo,
     },
     player: estado.player,
     earrapeAtivo: Date.now() < earrapeAte,
@@ -1579,6 +1688,12 @@ function estadoParaPainel() {
     pendentes: pendentes.map(paraPainel),
     historico: { quantidade: historico.faixas.length, desde: historico.desde },
     aprendendoRecompensa,
+    novidades: lerNovidades(),
+    deck: {
+      comandos: Object.entries(COMANDOS_DECK).map(([id, [nome, icone]]) => ({ id, nome, icone })),
+      pasta: path.join(PASTA, 'Atalhos pro Stream Deck'),
+      windows: process.platform === 'win32',
+    },
     logs,
   };
 }
@@ -1586,9 +1701,11 @@ function estadoParaPainel() {
 function estadoParaOverlay() {
   const t = tocandoAgora;
   return {
+    versao: VERSAO, // o overlay se recarrega sozinho quando o app muda de versão (pega as correções sem mexer no OBS)
     tocando: t ? { uri: t.uri, nome: t.nome, artistas: t.artistas, titulo: t.titulo, imagem: t.imagem, pedidoPor: t.pedidoPor } : null,
     player: estado.player,
     proximas: naFila().slice(0, 3).map((p) => ({ titulo: p.titulo, nome: p.nome, artistas: p.artistas, pedidoPor: p.pedidoPor })),
+    esconderPausado: cfg.esconder_overlay_pausado,
   };
 }
 
@@ -1701,8 +1818,96 @@ async function acaoDoPainel(a) {
       pedidosAbertos = !!a.abertos;
       log(pedidosAbertos ? '🔓 Pedidos abertos.' : '🔒 Pedidos fechados.');
       return null;
+    case 'novidades-vistas':
+      // o streamer clicou em "Entendi": a janela de novidades desta versão não aparece de novo
+      cfg.ultima_versao_vista = VERSAO;
+      salvarConfig();
+      return null;
+    case 'criar-atalhos': {
+      const pasta = await criarAtalhosDeck();
+      return `🎛️ Atalhos criados na pasta "${path.basename(pasta)}". É só arrastar cada um pro botão do Stream Deck.`;
+    }
+    case 'deck':
+      return executarComandoDeck(String(a.acao || ''));
     default:
       return 'Ação desconhecida.';
+  }
+}
+
+// ---------------------------------------------------------------- Stream Deck (Fifine, Elgato e outros)
+async function executarComandoDeck(acao) {
+  if (!COMANDOS_DECK[acao]) return 'Comando desconhecido.';
+  log(`🎛️ Stream Deck: ${COMANDOS_DECK[acao][0]}`);
+  switch (acao) {
+    case 'tocar-pausar': return acaoDoPainel({ tipo: 'tocar-pausar' });
+    case 'pular': return acaoDoPainel({ tipo: 'pular' });
+    case 'voltar': return acaoDoPainel({ tipo: 'voltar' });
+    case 'banir': return acaoDoPainel({ tipo: 'banir-atual' });
+    case 'pedidos': return acaoDoPainel({ tipo: 'pedidos', abertos: !pedidosAbertos });
+    case 'volume-mais':
+    case 'volume-menos': {
+      const atual = estado.spotify.volume == null ? 50 : estado.spotify.volume;
+      return acaoDoPainel({ tipo: 'volume', valor: atual + (acao === 'volume-mais' ? 10 : -10) });
+    }
+    case 'earrape': return earrape(cfg.canal_twitch || 'o streamer');
+    default: return null;
+  }
+}
+
+const textoPs = (s) => "'" + String(s).replace(/'/g, "''") + "'";
+// Cria um atalho (.lnk) pra cada comando. O Stream Deck só precisa "abrir" o atalho.
+async function criarAtalhosDeck() {
+  if (process.platform !== 'win32') throw new Error('Os atalhos do Stream Deck só funcionam no Windows.');
+  const pasta = path.join(PASTA, 'Atalhos pro Stream Deck');
+  fs.mkdirSync(pasta, { recursive: true });
+  const pastaApp = EH_EXE ? path.dirname(process.execPath) : __dirname;
+  const fixos = [];
+  if (!EH_EXE) fixos.push(`"${path.join(__dirname, 'streambeats.js')}"`);
+  // se o app está usando outra pasta ou porta (testes), o atalho leva junto
+  if (PASTA !== pastaApp) fixos.push(`"--pasta=${PASTA}"`);
+  if (PORTA !== 8888) fixos.push(`--porta=${PORTA}`);
+  const icone = EH_EXE ? `${process.execPath},0` : path.join(__dirname, 'assets', 'streambeats.ico');
+  const linhas = ['$ErrorActionPreference = "Stop"', '$sh = New-Object -ComObject WScript.Shell'];
+  for (const [acao, [nome]] of Object.entries(COMANDOS_DECK)) {
+    const lnk = path.join(pasta, `StreamBeats - ${nome}.lnk`);
+    linhas.push(`$l = $sh.CreateShortcut(${textoPs(lnk)}); $l.TargetPath = ${textoPs(process.execPath)}; `
+      + `$l.Arguments = ${textoPs([...fixos, `--deck=${acao}`].join(' '))}; $l.WorkingDirectory = ${textoPs(pastaApp)}; `
+      + `$l.IconLocation = ${textoPs(icone)}; $l.WindowStyle = 7; $l.Description = ${textoPs('StreamBeats: ' + nome)}; $l.Save()`);
+  }
+  const codificado = Buffer.from(linhas.join('\n'), 'utf16le').toString('base64');
+  await new Promise((ok, falhou) => {
+    const p = spawn('powershell', ['-NoProfile', '-NonInteractive', '-EncodedCommand', codificado], { windowsHide: true, stdio: 'ignore' });
+    p.on('exit', (codigo) => (codigo === 0 ? ok() : falhou(new Error('Não consegui criar os atalhos (código ' + codigo + ').'))));
+    p.on('error', falhou);
+  });
+  exec(`explorer "${pasta}"`, { windowsHide: true });
+  log('🎛️ Atalhos pro Stream Deck criados em: ' + pasta);
+  return pasta;
+}
+
+// Quem roda "StreamBeats --deck=pular": manda o comando pro StreamBeats aberto e sai, sem janela.
+async function enviarComandoDeck(acao) {
+  let chave;
+  try { chave = fs.readFileSync(ARQ_CONTROLE, 'utf8').trim(); } catch { return; } // o app não está aberto
+  try {
+    await fetch(`http://127.0.0.1:${PORTA}/api/controle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Controle': chave },
+      body: JSON.stringify({ acao }),
+      signal: AbortSignal.timeout(5000),
+    });
+  } catch { /* o app não respondeu */ }
+}
+
+async function tratarControle(req, res) {
+  if (req.method !== 'POST' || req.headers['x-controle'] !== CHAVE_CONTROLE) return json(res, 403, { erro: 'chave inválida' });
+  const corpo = await lerCorpo(req).catch(() => null);
+  try {
+    const aviso = await executarComandoDeck(String((corpo && corpo.acao) || ''));
+    return json(res, 200, { ok: true, aviso });
+  } catch (e) {
+    log('❗ Stream Deck: ' + e.message);
+    return json(res, 200, { ok: false, erro: e.message });
   }
 }
 
@@ -1730,6 +1935,10 @@ async function tratarApi(req, res, rota) {
       case '/api/acao': {
         const aviso = await acaoDoPainel(corpo);
         return json(res, 200, { ok: true, aviso });
+      }
+      case '/api/verificar': {
+        const r = corpo.servico === 'twitch' ? await reverificarTwitch() : await reverificarSpotify();
+        return json(res, 200, { ok: true, ...r });
       }
       case '/api/criar-playlist': {
         const url = await criarPlaylist();
@@ -1772,6 +1981,7 @@ function iniciarServidor() {
       const u = new URL(req.url, URL_PAINEL);
 
       try {
+        if (u.pathname === '/api/controle') return await tratarControle(req, res);
         if (u.pathname.startsWith('/api/')) return await tratarApi(req, res, u.pathname);
 
         if (u.pathname === '/') {
@@ -1784,6 +1994,8 @@ function iniciarServidor() {
         if (ARQUIVOS_PUBLICOS[u.pathname]) {
           const [arq, tipo] = ARQUIVOS_PUBLICOS[u.pathname];
           res.writeHead(200, { 'Content-Type': tipo, 'Cache-Control': u.pathname === '/overlay' ? 'no-store' : 'max-age=86400' });
+          // Só para desenvolvimento: STREAMBEATS_OVERLAY aponta para um overlay de teste (prévia).
+          if (u.pathname === '/overlay' && !EH_EXE && process.env.STREAMBEATS_OVERLAY) return res.end(fs.readFileSync(process.env.STREAMBEATS_OVERLAY));
           return res.end(lerArquivo(arq));
         }
         if (u.pathname === '/manifest.webmanifest') {
@@ -1888,8 +2100,15 @@ async function main() {
     // usado pelo gerar-exe para conferir se o .exe ficou bom
     htmlDoPainel();
     for (const [arq] of Object.values(ARQUIVOS_PUBLICOS)) lerArquivo(arq);
+    lerArquivo('CHANGELOG.md'); // a janela de novidades lê daqui
     if (process.env.STREAMBEATS_AUTOTESTE_ARQ) fs.writeFileSync(process.env.STREAMBEATS_AUTOTESTE_ARQ, 'AUTOTESTE OK ' + VERSAO);
     imprimir('AUTOTESTE OK');
+    process.exit(0);
+  }
+  const deck = argumento('deck');
+  if (deck) {
+    // aberto por um atalho do Stream Deck: só manda o comando e fecha
+    await enviarComandoDeck(deck);
     process.exit(0);
   }
   // Durante a live, um erro inesperado não pode derrubar o app: registra e segue.
@@ -1918,6 +2137,7 @@ async function main() {
   }
   carregarConfig();
   carregarFila();
+  try { fs.writeFileSync(ARQ_CONTROLE, CHAVE_CONTROLE); } catch { /* sem a chave, os atalhos não funcionam */ }
   if (fs.existsSync(ARQ_TOKENS)) {
     try { tokens = lerJson(ARQ_TOKENS); } catch { tokens = {}; }
   }
@@ -1928,6 +2148,7 @@ async function main() {
   if (spotifyConectado()) await verificarSpotify();
   await reconectarChat();
   setInterval(atualizarPlayer, INTERVALO_MS);
+  setInterval(verificarAoVivo, 60000); // a live está no ar? (confere a cada minuto)
   if (GITHUB_REPO) {
     setTimeout(() => procurarAtualizacao(), 10000);
     setInterval(() => procurarAtualizacao(), 6 * 3600000);

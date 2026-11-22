@@ -1,35 +1,46 @@
-# Histórico de versões
+# Novidades do StreamBeats
+
+O que mudou em cada versão, em poucas palavras.
+
+## v1.1.0 (2026-11-21)
+
+Painel novo, mais limpo, e controle pelo Stream Deck.
+
+- Painel novo, com menu na lateral: Reprodução, Moderação, Configuração e Ajuda.
+- Dois cartões no canto mostram se a Twitch e o Spotify estão funcionando. Clique neles pra reconectar.
+- Use os botões do seu Stream Deck (Fifine, Elgato e outros) pra tocar, pausar, pular, mudar o volume e mais.
+- O overlay do OBS some sozinho quando você pausa a música e volta quando der play.
+- As opções salvam sozinhas: é só mudar. Os campos mostram a unidade (seg, min, %) dentro da caixinha.
+- Pra tirar um pedido da fila, use a lixeira. Ela não bane a música.
+- A janela abre sempre do mesmo tamanho, com tudo no lugar.
+- Esta janela de novidades aparece uma vez a cada versão nova.
 
 ## v1.0.2 (2026-11-21)
 
-Visual repaginado: mais refinado e minimalista, com as mesmas cores.
+Visual mais caprichado, com as mesmas cores.
 
-- Fila em linhas limpas, sem caixa dentro de caixa, e conteúdo centralizado em tela grande.
-- Logo em texto sólido, títulos sem caixa alta, bordas mais finas e avisos em cores translúcidas.
-- Seleção de texto, barra de rolagem, cursor e foco do teclado no tema do app.
-- Animações curtas e com propósito: botões que afundam ao clicar, interruptor e abas que deslizam, capa que troca suave quando muda a música. Tudo desliga com a opção de menos movimento do Windows.
-- Overlay do OBS: a música nova entra deslizando e saindo do desfoque, e o equalizador fica ao lado do nome.
-- Contraste do texto ajustado pro padrão de acessibilidade.
+- Fila mais limpa e fácil de ler.
+- Botões e trocas de tela com animações curtas e suaves. Quem desliga as animações no Windows não vê nenhuma.
+- No overlay do OBS, a música nova entra deslizando.
+- Textos com mais contraste, pra ler melhor.
 
 ## v1.0.1 (2026-11-21)
 
 Painel mais compacto.
 
-- Topo numa linha só: Spotify e chat viram bolinhas de status, e o texto aparece ao passar o mouse.
-- As abas ficam presas no topo quando você rola a tela.
-- Moderação e Configurar voltam a mostrar tudo aberto. Só o quadro de Sincronização continua minimizável.
-- A janela do painel abre no tamanho 640 × 820.
-- Os scripts de build sempre leem o código em UTF-8, pra não estragar os acentos.
+- O topo do painel cabe numa linha só.
+- As abas ficam fixas no topo quando você rola a tela.
+- As partes do painel voltam a aparecer abertas.
+- A janela do painel abre num tamanho melhor.
 
 ## v1.0.0 (2026-11-21)
 
-Primeira versão pública.
+Primeira versão.
 
-- Pedidos de música do chat da Twitch (`!sr`) direto no Spotify, com fila própria: arrastar, topo, tocar agora, tirar da fila.
-- Aprovação manual de pedidos, bandeira vermelha, banir/desbanir, bloqueios, limites por pessoa e mais pedidos pra subs e VIPs.
-- Busca tolerante a erro de digitação, que recusa texto sem sentido e links que não são de música.
-- Comandos `!song`, `!fila`, `!wrongsong`, `!voteskip`, volume pelo chat, `!furarfila` e `!earrape`.
-- Pontos do canal criados e controlados pelo app, com devolução automática dos pontos quando o pedido falha.
-- Overlay pro OBS, histórico da live e criação de playlist no Spotify.
-- Painel sem janela preta, que reconecta sozinho, e fila salva em disco.
-- Atualização automática pelos Releases do GitHub, com conferência SHA-256.
+- O chat pede música com !sr e ela entra no Spotify do streamer, numa fila que você controla (arrastar, mandar pro topo, tocar agora, tirar).
+- Você pode aprovar os pedidos antes, banir músicas, bloquear pessoas e limitar quantos pedidos cada um faz.
+- A busca entende erro de digitação e recusa o que não é música.
+- Comandos pro chat: ver a música atual, ver a fila, tirar o próprio pedido, votar pra pular, volume, furar fila e earrape.
+- Pontos do canal: o app cria as recompensas e devolve os pontos se o pedido não der certo.
+- Overlay pro OBS, histórico da live e playlist no Spotify com tudo que tocou.
+- O app avisa quando sai versão nova e atualiza com um clique.

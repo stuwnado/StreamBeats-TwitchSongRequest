@@ -6,6 +6,7 @@
   "assets": {
     "painel.html": "painel.html",
     "overlay.html": "overlay.html",
+    "CHANGELOG.md": "CHANGELOG.md",
     "assets/streambeats.ico": "assets/streambeats.ico",
     "assets/streambeats_256x256.png": "assets/streambeats_256x256.png",
     "assets/streambeats_512x512.png": "assets/streambeats_512x512.png"

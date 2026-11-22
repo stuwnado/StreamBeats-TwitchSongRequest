@@ -16,6 +16,8 @@ Roda no PC dele, de graça, sem limite de pedidos e sem mandar dados para sites 
 - **Pontos do canal:** o app cria as recompensas na Twitch (Pedir música, Furar fila, Earrape), liga e desliga cada uma e **devolve os pontos sozinho** quando um pedido falha.
 - **Overlay pro OBS**, com capa, nome, barra de tempo, quem pediu e as próximas músicas.
 - **Controles do Spotify no painel:** voltar, play/pausa, pular e volume.
+- **Stream Deck** (Fifine, Elgato e outros): um atalho pra cada comando, é só arrastar pro botão.
+- **Status sempre à vista:** dois cartões no canto mostram a Twitch (ao vivo, offline, desconectada) e o Spotify (tocando, pausado, desconectado).
 - **Histórico da live**, com botão pra criar uma playlist no Spotify com tudo que tocou.
 - A fila fica **salva no PC**, e o app roda **sem janela preta**.
 - **Atualização pelo GitHub** com um clique (depois de configurada).
@@ -41,11 +43,14 @@ O `iniciar-com-janela.bat` faz o mesmo, mas mostra a janela preta com tudo que a
 
 ## Primeira vez usando (5 minutos)
 
-Abra o app. Aparece só o **painel**, já na aba **Configurar**, com o quadro **Sincronização** em destaque:
+Abra o app. Aparece só o **painel**, já na aba **Configuração**, com o quadro **Sincronização** em destaque:
 
 1. **Conectar o Spotify (obrigatório):** crie um app grátis em developer.spotify.com. O painel mostra o passo a passo e o endereço exato pra colar (é só clicar nele pra copiar).
 2. **Canal da Twitch (obrigatório):** escreva o nome do canal.
-3. **Entrar na Twitch (recomendado):** serve pro bot responder no chat. Entrando com **a conta do canal**, também libera os pontos do canal.
+3. **Entrar na Twitch (recomendado):** faz o bot responder no chat e libera os pontos do canal (entre com **a conta do canal**). Sem isso, os pedidos funcionam, mas sem avisos no chat.
+4. **Pontos do canal (opcional):** recompensas de pontos pra pedir música, furar a fila e earrape. Veja "Pontos do canal" mais abaixo.
+
+Enquanto falta fazer, cada passo mostra uma etiqueta vermelha (obrigatório) ou amarela (recomendado/opcional). Quando fica pronto, vira um check verde.
 
 Tudo salva sozinho. Depois de sincronizado, o quadro vira uma linha só.
 
@@ -53,6 +58,9 @@ Tudo salva sozinho. Depois de sincronizado, o quadro vira uma linha só.
 
 - **Fechar o painel não desliga o app.** Os pedidos continuam funcionando. Pra ver o painel de novo, abra o app outra vez.
 - **Para desligar de verdade:** botão **Desligar**, no topo do painel.
+- **Status no canto esquerdo:** o cartão da Twitch fica verde (ao vivo), cinza (offline, lendo o chat) ou vermelho (desconectado). O do Spotify fica verde (tocando), amarelo (pausado) ou vermelho (fechado ou desconectado). Clique num deles pra conferir a conexão. Se o login não valer mais, abre a Sincronização. Pra saber se a live está no ar, o app precisa do passo 3 (entrar na Twitch).
+- **A janela tem tamanho fixo** (900 × 650). Se alguém puxar a borda, ela volta sozinha pro tamanho certo.
+- **Novidades:** quando o app abre numa versão nova, aparece uma vez uma janela com o que mudou. É só clicar em **Entendi**.
 
 ## Como a fila funciona
 
@@ -68,16 +76,16 @@ Se o streamer adicionar músicas direto pelo app do Spotify, elas tocam do jeito
 | `!song` ou `!tocando` | todos | mostra o que está tocando, quem pediu e o link |
 | `!fila` | todos | mostra as próximas 3 e a posição do seu pedido |
 | `!remover`, `!wrongsong` ou `!errada` | todos | tira o seu último pedido |
-| `!voteskip` | todos | vota pra pular (5 votos, dá pra mudar) |
+| `!voteskip` | todos | vota pra pular (3 votos, dá pra mudar) |
 | `!volume` | todos | mostra o volume |
 | `!volume 50`, `!vol+`, `!vol-` | mods (dá pra liberar) | muda o volume, até o máximo escolhido |
-| `!furarfila música` | mods (dá pra liberar) | pede uma música na frente da fila |
-| `!earrape` | mods (dá pra liberar) | volume no máximo por alguns segundos, depois volta sozinho |
+| `!furarfila música` | subs, VIPs e mods (dá pra mudar) | pede uma música na frente da fila |
+| `!earrape` | subs, VIPs e mods (dá pra mudar) | volume no máximo por alguns segundos, depois volta sozinho |
 | `!remover @fulano` | mods | tira o último pedido do fulano |
 | `!skip` ou `!pular` | mods | pula a música atual |
 | `!sroff` / `!sron` | mods | fecha / abre os pedidos |
 
-Os nomes dos comandos mudam em **Configurar → Nomes dos comandos**. Quem pode usar cada um muda em **Moderação**.
+Os nomes dos comandos mudam em **Configuração → Nomes dos comandos**. Quem pode pedir muda em **Moderação → Regras de pedidos**. Quem usa o volume, o `!furarfila` e o `!earrape` muda em **Moderação → Volume e Comandos Especiais**.
 
 ## Pontos do canal
 
@@ -85,20 +93,30 @@ Só existem em canal **Afiliado ou Parceiro** da Twitch (é a Twitch que libera)
 
 **Jeito recomendado (o app cuida de tudo):**
 1. Faça o passo 3 da Sincronização entrando com **a conta do canal**.
-2. Em **Configurar → Pontos do canal**, escolha os custos e clique em **Criar recompensas na Twitch**.
+2. Em **Configuração → Sincronização → passo 4 (Pontos do canal)**, escolha os custos e clique em **Criar recompensas na Twitch**.
 3. Cada recompensa ganha um botão de liga/desliga. Desligada, ela some do chat. Se um pedido falhar (música não encontrada, banida, fila cheia), **os pontos voltam sozinhos**.
 
 **Recompensas criadas à mão:** também funcionam, pelo botão **Detectar**. Nesse modo, o app não consegue desligar a recompensa nem devolver os pontos.
 
 ## Overlay no OBS
 
-1. Em **Configurar → Overlay no OBS**, escolha **"Só a música tocando"** ou **"Música tocando + próximas 3 da fila"** e clique em **Copiar**.
+1. Em **Configuração → Overlay no OBS**, escolha **"Só a música tocando"** ou **"Música tocando + próximas 3 da fila"** e clique em **Copiar**.
 2. No OBS: **Fontes → + → Navegador**, cole o link e use o tamanho indicado do lado.
 
 A caixinha **Alinhar à direita** muda os dois links.
+Com a opção **Esconder o overlay quando a música estiver pausada** (ligada no começo), o overlay sai da tela uns 3 segundos depois de pausar e volta sozinho quando der play.
+Quando o app muda de versão, o overlay se recarrega sozinho no OBS: não precisa apagar e criar a fonte de novo.
 Também continua existindo o arquivo `tocando_agora.txt`, pra quem prefere uma fonte de texto simples.
 
 **Dica pro earrape:** coloque um filtro **Limitador** na fonte de áudio do Spotify no OBS, pra não estourar o som da live.
+
+## Stream Deck (Fifine, Elgato e outros)
+
+1. Em **Configuração → Stream Deck**, clique em **Criar atalhos**. Abre uma pasta com um atalho pra cada comando: tocar/pausar, pular, voltar, banir a atual, abrir/fechar pedidos, volume +10, volume -10 e earrape.
+2. No programa do Stream Deck (ex.: o da Fifine D6/AmpliGame), **arraste cada atalho pra um botão** (ou use a ação de abrir programa/arquivo e escolha o atalho).
+3. Apertar o botão manda o comando pro StreamBeats que já está aberto, sem abrir janela.
+
+O **Pular** daqui respeita a fila de pedidos. As teclas de mídia comuns pulam pra próxima da playlist do Spotify. Os atalhos só funcionam no próprio PC, com uma chave que o app guarda na pasta dele (`controle.chave`).
 
 ## Atualizações (para quem publica o app no GitHub)
 
@@ -119,6 +137,8 @@ O `.gitignore` já impede que `tokens.json`, `config.json`, `fila.json` e `regis
 | `tokens.json` | os logins do Spotify e da Twitch. **Não mande para ninguém.** Se apagar, é só conectar de novo |
 | `registro.log` | tudo que aconteceu. Mande esse arquivo quando for pedir ajuda com algum problema |
 | `tocando_agora.txt` | a música atual, para o OBS |
+| `controle.chave` | a chave dos atalhos do Stream Deck (troca sozinha toda vez que o app abre) |
+| `Atalhos pro Stream Deck` | a pasta com os atalhos, criada pelo botão **Criar atalhos** |
 
 ## Bom saber
 

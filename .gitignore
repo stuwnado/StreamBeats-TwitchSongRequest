@@ -11,3 +11,10 @@ dist/
 
 # arquivos de trabalho da skill de design (capturas temporarias)
 .impeccable/
+
+# visual em teste (previa antes de aplicar)
+previa/
+
+# chave e atalhos do Stream Deck (pessoais)
+controle.chave
+Atalhos pro Stream Deck/

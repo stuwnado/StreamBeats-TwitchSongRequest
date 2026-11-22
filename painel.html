@@ -7,23 +7,23 @@
 <link rel="icon" type="image/png" sizes="256x256" href="/icone.png">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="apple-touch-icon" href="/icone-512.png">
-<link rel="manifest" href="/manifest.webmanifest">
-<meta name="theme-color" content="#110f18">
+<meta name="theme-color" content="#110e1a">
 <style>
   /* ============ tokens ============ */
   :root {
     color-scheme: dark;
-    --fundo: #0c0b11;
-    --topo: #110f18;
-    --painel: #15141c;
-    --painel2: #1c1b25;
-    --campo: #0f0e15;
+    --fundo: #0c0a13;
+    --lateral: #100d19;
+    --painel: #15121f;
+    --painel2: #1d1a29;
+    --campo: rgba(8, 7, 14, .72);
     --borda: rgba(255, 255, 255, .07);
     --borda-forte: rgba(255, 255, 255, .12);
-    --texto: #eeedf3;
-    --suave: #9b99ac;
+    --texto: #efedf6;
+    --suave: #a19eb3;
     --fraco: #878599;
     --roxo: #9147ff;
+    --roxo-escuro: #7a2ff0;
     --roxo-claro: #b994ff;
     --roxo-fundo: rgba(145, 71, 255, .14);
     --verde: #1ed760;
@@ -35,142 +35,220 @@
     --amarelo: #ffc53d;
     --amarelo-claro: #ffe08a;
     --amarelo-fundo: rgba(255, 197, 61, .10);
-    --raio: 14px;
+    --raio: 16px;
     --raio-p: 10px;
-    --sombra: 0 1px 0 rgba(255, 255, 255, .03) inset, 0 10px 30px -18px rgba(0, 0, 0, .7);
     --ease-out: cubic-bezier(.23, 1, .32, 1);
-    --largura: 1100px;
   }
 
   /* ============ base ============ */
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
-  html, body { margin: 0; background: var(--fundo); color: var(--texto); font: 14px/1.5 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  html, body { margin: 0; color: var(--texto); font: 14px/1.5 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  body {
+    background:
+      radial-gradient(1100px 620px at 18% -12%, rgba(145, 71, 255, .14), transparent 62%),
+      radial-gradient(900px 520px at 108% 8%, rgba(70, 100, 220, .08), transparent 60%),
+      var(--fundo);
+    background-attachment: fixed;
+  }
   button, input, textarea, select { font: inherit; color: inherit; }
+  fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
   a { color: var(--roxo-claro); text-underline-offset: 3px; text-decoration-thickness: 1px; }
   a:hover { color: #d4bcff; }
   ::selection { background: rgba(145, 71, 255, .45); color: #fff; }
   input, textarea { caret-color: var(--roxo-claro); }
-  * { scrollbar-width: thin; scrollbar-color: #2e2c3b transparent; }
+  * { scrollbar-width: thin; scrollbar-color: #2e2b3d transparent; }
   ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-thumb { background: #2e2c3b; border-radius: 99px; border: 3px solid transparent; background-clip: content-box; }
-  ::-webkit-scrollbar-thumb:hover { background-color: #3d3a4f; }
-  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #2e2b3d; border-radius: 99px; border: 3px solid transparent; background-clip: content-box; }
+  ::-webkit-scrollbar-thumb:hover { background-color: #3d394f; }
   :focus-visible { outline: 2px solid var(--roxo-claro); outline-offset: 2px; border-radius: 6px; }
   .ic { display: inline-flex; flex: none; }
   .ic svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.85; stroke-linecap: round; stroke-linejoin: round; }
   .ic.p svg { width: 14px; height: 14px; stroke-width: 2; }
-  .ic.g svg { width: 22px; height: 22px; }
+  .ic.g svg { width: 24px; height: 24px; }
+  .logo-spotify svg { display: block; width: 100%; height: 100%; }
+  /* Ícone ao lado de texto: a fonte do Windows assenta as letras um pouco abaixo do centro,
+     então o ícone desce o mesmo tanto pra ficar bem no meio das letras (medido na tela). */
+  .botao > .ic, .menu button > .ic, h2 > .ic, summary.bloco-titulo > .ic:first-child, details.sync > summary > .ic:first-child,
+  .recompensa b > .ic, .salvo-card > .ic, .lista-deck li > .ic, .campo-icone > .ic { translate: 0 1.5px; }
+  .chip > .ic { translate: 0 1.75px; }
+  .rodape-log > summary > .ic:first-child { translate: 0 .75px; }
 
-  /* ============ topo ============ */
-  .topo { position: sticky; top: 0; z-index: 5; background: rgba(17, 15, 24, .92); backdrop-filter: saturate(140%) blur(10px); border-bottom: 1px solid var(--borda); }
-  header { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 16px 4px; position: relative; max-width: var(--largura); margin: 0 auto; }
-  .logo { font-weight: 650; font-size: 16px; letter-spacing: -.01em; display: flex; align-items: center; gap: 9px; margin-right: 4px; }
-  .logo img { display: block; width: 30px; height: 30px; }
-  .logo span { color: var(--texto); }
-  .logo small { font-size: 11.5px; font-weight: 500; color: var(--fraco); letter-spacing: 0; }
-  /* status: só a bolinha; o texto aparece ao passar o mouse */
-  .pilula { position: relative; display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; cursor: help; transition: background-color 150ms ease; }
-  .pilula:hover { background: var(--painel2); }
-  .pilula span { display: none; }
-  .pilula::after { content: attr(data-dica); position: absolute; top: calc(100% + 8px); left: 50%; transform: translate(-50%, -4px); white-space: nowrap;
-    background: #22202c; border: 1px solid var(--borda-forte); color: var(--texto); font-size: 12px; padding: 5px 10px; border-radius: 8px;
-    box-shadow: 0 8px 20px -8px rgba(0, 0, 0, .7); opacity: 0; pointer-events: none; z-index: 10;
-    transition: opacity 140ms var(--ease-out), transform 140ms var(--ease-out); }
-  .pilula:hover::after { opacity: 1; transform: translate(-50%, 0); }
-  .pilula i { width: 9px; height: 9px; border-radius: 50%; background: var(--vermelho); display: inline-block; flex: none; box-shadow: 0 0 0 3px var(--vermelho-fundo); }
-  .pilula.ok i { background: var(--verde); box-shadow: 0 0 0 3px var(--verde-fundo); }
-  .pilula.meio i { background: var(--amarelo); box-shadow: 0 0 0 3px var(--amarelo-fundo); }
+  /* ============ estrutura: menu lateral + conteúdo ============ */
+  .app { display: grid; grid-template-columns: 208px minmax(0, 1fr); height: 100vh; overflow: hidden; }
+  .lateral { position: relative; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; padding: 20px 12px 14px;
+    background: linear-gradient(180deg, rgba(20, 16, 33, .96), rgba(12, 10, 19, .96)); border-right: 1px solid rgba(145, 71, 255, .14); z-index: 6; }
+  .marca { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; padding: 2px 0 6px; }
+  .marca img { width: 50px; height: 50px; margin-bottom: 4px; filter: drop-shadow(0 8px 16px rgba(0, 0, 0, .5)); }
+  .marca b { font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
+  .marca small { color: var(--suave); font-size: 12px; }
+  .menu { display: flex; flex-direction: column; gap: 4px; }
+  .menu button { position: relative; display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 12px; border: 1px solid transparent; background: none;
+    color: var(--suave); font-weight: 600; cursor: pointer; text-align: left;
+    transition: background-color 150ms ease, color 150ms ease, transform 160ms var(--ease-out); }
+  .menu button:hover { background: rgba(255, 255, 255, .05); color: var(--texto); }
+  .menu button:active { transform: scale(.98); }
+  .menu button.ativo { background: linear-gradient(135deg, var(--roxo), var(--roxo-escuro)); color: #fff; border-color: rgba(200, 165, 255, .35);
+    box-shadow: 0 10px 24px -12px rgba(145, 71, 255, .9); }
+  .menu .bolinha { margin-left: auto; display: inline-block; min-width: 18px; padding: 0 5px; border-radius: 99px; background: var(--amarelo); color: #1a1400; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; }
+  .status-cartoes { margin-top: auto; display: flex; flex-direction: column; gap: 8px; }
+  .status-cartao { --cor: var(--vermelho); display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 8px 12px;
+    border-radius: 12px; text-align: left; background: rgba(255, 255, 255, .03); border: 1px solid var(--borda); color: var(--texto); cursor: pointer;
+    transition: background-color 150ms ease, border-color 150ms ease, transform 160ms var(--ease-out); }
+  .status-cartao:hover { background: rgba(255, 255, 255, .06); border-color: var(--borda-forte); }
+  .status-cartao:active { transform: scale(.98); }
+  .status-cartao:disabled { cursor: progress; }
+  .status-cartao[data-cor="verde"] { --cor: var(--verde); }
+  .status-cartao[data-cor="amarelo"] { --cor: var(--amarelo); }
+  .status-cartao[data-cor="cinza"] { --cor: #8d8a9e; }
+  .st-linha { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; }
+  .ponto { width: 9px; height: 9px; border-radius: 50%; background: var(--cor); box-shadow: 0 0 0 3px color-mix(in srgb, var(--cor) 20%, transparent); flex: none;
+    transition: background-color 200ms ease, box-shadow 200ms ease; }
+  .status-cartao[data-cor="verde"] .ponto { box-shadow: 0 0 0 3px var(--verde-fundo), 0 0 10px rgba(30, 215, 96, .55); }
+  .st-txt { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .status-cartao small { color: var(--suave); font-size: 12px; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .st-logo { width: 28px; height: 28px; flex: none; color: var(--cor); transition: color 200ms ease; }
+  .st-logo svg { display: block; width: 100%; height: 100%; }
+  /* conferindo a conexão: o ícone pulsa e o cartão não aceita outro clique */
+  .status-cartao.verificando .st-logo { animation: pulso 900ms ease-in-out infinite; }
+  @keyframes pulso { 50% { transform: scale(.82); opacity: .5; } }
+
+  .conteudo { min-width: 0; height: 100vh; display: flex; flex-direction: column; }
+  .barra-topo { position: relative; flex: none; z-index: 5; display: flex; align-items: center; gap: 12px; flex-wrap: nowrap; padding: 10px 20px;
+    background: rgba(13, 11, 20, .84); backdrop-filter: saturate(140%) blur(10px); border-bottom: 1px solid rgba(145, 71, 255, .12); }
+  .titulo-aba { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; }
   .espaco { flex: 1; }
-  .salvo { position: absolute; right: 16px; top: calc(100% + 52px); z-index: 6; font-size: 12px; color: var(--verde-claro); display: inline-flex; align-items: center; gap: 5px;
-    background: #10231a; border: 1px solid rgba(30, 215, 96, .25); padding: 3px 10px; border-radius: 99px; pointer-events: none;
-    opacity: 0; transform: translateY(-4px); transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out); }
-  .salvo.mostrar { opacity: 1; transform: none; }
+  main { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; padding: 14px 20px; width: 100%; scroll-padding-top: 12px; }
+  .aba { display: none; width: 100%; max-width: 1320px; }
+  .aba.ativa { display: block; padding-bottom: 6px; }
+  /* Reprodução ocupa a janela inteira: player em cima, a fila estica e rola por dentro, registro embaixo */
+  #aba-reproducao.ativa { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; padding-bottom: 0; }
 
-  nav { display: flex; gap: 2px; padding: 0 12px; overflow-x: auto; max-width: var(--largura); margin: 0 auto; scrollbar-width: none; }
-  nav button { position: relative; background: none; border: none; padding: 10px 10px 11px; color: var(--suave); cursor: pointer; font-weight: 550; white-space: nowrap; display: inline-flex; align-items: center; gap: 7px; transition: color 150ms ease; }
-  nav button::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: -1px; height: 2px; border-radius: 2px; background: var(--roxo); transform: scaleX(0); transition: transform 200ms var(--ease-out); }
-  nav button:hover { color: var(--texto); }
-  nav button.ativo { color: var(--texto); }
-  nav button.ativo::after { transform: scaleX(1); }
-  nav .bolinha { display: inline-block; min-width: 18px; padding: 0 5px; border-radius: 99px; background: var(--amarelo); color: #1a1400; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; }
-  @media (max-width: 700px) { .logo small { display: none; } }
+  /* ============ cartões ============ */
+  .cartao, .bloco, details.sync {
+    position: relative; border: 1px solid transparent; border-radius: var(--raio); min-width: 0;
+    background: linear-gradient(150deg, rgba(145, 71, 255, .16) 0%, rgba(26, 22, 38, .94) 34%, rgba(20, 18, 30, .96) 68%, rgba(70, 95, 210, .11) 100%);
+    box-shadow: 0 20px 44px -26px rgba(0, 0, 0, .85);
+  }
+  .cartao::before, .bloco::before, details.sync::before {
+    content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: linear-gradient(150deg, rgba(190, 150, 255, .55), rgba(145, 71, 255, .15) 38%, rgba(255, 255, 255, .05) 66%, rgba(120, 150, 255, .3));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+  }
+  .cartao { padding: 18px; }
+  h2 { font-size: 17px; font-weight: 700; color: var(--texto); margin: 0 0 14px; display: flex; align-items: center; gap: 10px; letter-spacing: -.01em; }
+  h2 > .ic { color: var(--roxo-claro); }
+  h2 small { font-size: 12px; font-weight: 400; color: var(--suave); margin-left: auto; display: inline-flex; align-items: center; gap: 6px; }
+  h2 .qtd { color: var(--suave); font-weight: 500; font-variant-numeric: tabular-nums; }
 
-  main { padding: 16px 16px 40px; max-width: var(--largura); margin: 0 auto; }
-  .aba { display: none; }
-  .aba.ativa { display: block; }
+  .reproducao-fila { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; min-width: 0; flex: 1 1 0; min-height: 190px; }
+  .grade-blocos { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 18px; align-items: start; }
+  .coluna { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+  @media (max-width: 560px) { .grade-blocos { grid-template-columns: 1fr; } }
 
-  /* ============ estrutura ============ */
-  .grade { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 16px; align-items: start; }
-  @media (max-width: 760px) { .grade { grid-template-columns: 1fr; } }
-  .coluna { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-  .cartao { background: var(--painel); border: 1px solid var(--borda); border-radius: var(--raio); padding: 16px; min-width: 0; box-shadow: var(--sombra); }
-  h2 { font-size: 14px; font-weight: 600; color: var(--texto); margin: 0 0 12px; display: flex; align-items: center; gap: 8px; letter-spacing: -.005em; }
-  h2 > .ic { color: var(--suave); }
-  h2 small { font-size: 12px; font-weight: 400; color: var(--fraco); margin-left: auto; }
-  h2 span:not(.ic) { color: var(--suave); font-weight: 500; font-variant-numeric: tabular-nums; }
-
-  /* blocos (Moderação e Configurar) */
-  .sanfonas { display: flex; flex-direction: column; gap: 14px; }
-  .bloco { background: var(--painel); border: 1px solid var(--borda); border-radius: var(--raio); padding: 16px 16px 6px; box-shadow: var(--sombra); }
-  .bloco-titulo { display: flex; align-items: center; gap: 10px; font-weight: 600; margin-bottom: 14px; }
-  .bloco-titulo > .ic { color: var(--suave); }
+  /* partes que abrem e fecham (cada uma independente) */
+  .bloco { padding: 16px 18px 6px; }
+  details.bloco > summary.bloco-titulo { position: relative; list-style: none; cursor: pointer; user-select: none; display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 700;
+    border-radius: 8px; margin: -4px -6px 14px; padding: 4px 6px; transition: background-color 150ms ease; }
+  details.bloco > summary.bloco-titulo::-webkit-details-marker { display: none; }
+  details.bloco > summary.bloco-titulo:hover { background: rgba(255, 255, 255, .035); }
+  .bloco-titulo > .ic:first-child { color: var(--roxo-claro); }
   .bloco-titulo .desc { color: var(--fraco); font-weight: 400; font-size: 12px; margin-left: auto; text-align: right; }
-  .bloco > .corpo { padding: 0 0 10px; }
+  .bloco-titulo .seta { margin-left: auto; }
+  .bloco-titulo .desc + .seta { margin-left: 4px; }
+  .salvo-card { position: absolute; right: 40px; top: 50%; display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: var(--verde-claro);
+    background: #13241a; border: 1px solid rgba(30, 215, 96, .3); padding: 1px 9px; border-radius: 99px; pointer-events: none;
+    opacity: 0; transform: translateY(-50%) scale(.94); transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out); }
+  .salvo-card.mostrar { opacity: 1; transform: translateY(-50%); }
+  details.bloco > summary .seta { color: var(--suave); transition: transform 200ms var(--ease-out); }
+  details.bloco[open] > summary .seta { transform: rotate(180deg); }
+  details.bloco:not([open]) { padding-bottom: 12px; }
+  details.bloco:not([open]) > summary.bloco-titulo { margin-bottom: 0; }
+  .bloco .corpo { padding: 0 0 10px; }
 
-  /* ============ player ============ */
-  .tocando { display: flex; gap: 16px; align-items: center; }
-  .capa { width: 88px; height: 88px; border-radius: 12px; background: var(--painel2) center/cover; flex: none; box-shadow: 0 10px 24px -12px rgba(0, 0, 0, .8); }
-  .capa.vazia { background: radial-gradient(120% 120% at 30% 20%, #241d3a, #17151f) center/cover; position: relative; box-shadow: none; border: 1px solid var(--borda); }
-  .capa.vazia::after { content: ""; position: absolute; inset: 0; background: url("/icone.png") center/58% no-repeat; opacity: .55; }
+  /* ============ topo: Spotify / tocando agora ============ */
+  .hero { padding: 16px 18px; overflow: hidden; flex: none; }
+  .hero-onda { position: absolute; inset: 0; pointer-events: none; border-radius: inherit; overflow: hidden; }
+  .hero-onda::before, .hero-onda::after { content: ""; position: absolute; border-radius: 50%; }
+  .hero-onda::before { width: 900px; height: 360px; right: -320px; top: -180px; background: radial-gradient(closest-side, rgba(145, 71, 255, .32), transparent 70%); transform: rotate(-12deg); }
+  .hero-onda::after { width: 700px; height: 260px; right: -120px; bottom: -190px; background: radial-gradient(closest-side, rgba(110, 60, 230, .26), transparent 70%); transform: rotate(8deg); }
+  .hero > *:not(.hero-onda) { position: relative; }
+  .hero-player { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 18px; align-items: center; }
+  .capa { width: 120px; height: 120px; border-radius: 14px; background: var(--painel2) center/cover; flex: none;
+    border: 1px solid rgba(185, 148, 255, .45); box-shadow: 0 0 20px rgba(145, 71, 255, .28), 0 12px 26px -12px rgba(0, 0, 0, .85); }
+  .capa.vazia { background: radial-gradient(120% 120% at 30% 20%, #2a2042, #17151f); position: relative; }
+  .capa.vazia::after { content: ""; position: absolute; inset: 0; background: url("/icone.png") center/58% no-repeat; opacity: .6; }
   .capa.troca { animation: troca 380ms var(--ease-out); }
   @keyframes troca { from { opacity: .2; transform: scale(.96); } to { opacity: 1; transform: none; } }
-  .tocando .info { flex: 1; min-width: 0; }
-  .tocando .titulo { font-size: 17px; font-weight: 650; line-height: 1.3; letter-spacing: -.01em; overflow-wrap: anywhere; text-wrap: balance; }
-  .tocando .sub { color: var(--suave); font-size: 13.5px; overflow-wrap: anywhere; margin-top: 1px; }
-  .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
-  .chip { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 500; line-height: 18px; padding: 0 8px; border-radius: 99px; background: rgba(255, 255, 255, .05); border: 1px solid var(--borda); color: var(--suave); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
-  .chip.por { color: var(--verde-claro); border-color: rgba(30, 215, 96, .22); background: var(--verde-fundo); }
+  .hero-player .info { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+  .titulo { font-size: 20px; font-weight: 700; line-height: 1.3; letter-spacing: -.015em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sub { color: var(--suave); font-size: 14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 0 1 auto; }
+  .linha-artista { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 22px; }
+  .linha-artista .chips { flex: 0 1 auto; flex-wrap: nowrap; min-width: 0; overflow: hidden; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; line-height: 20px; padding: 0 9px; border-radius: 99px; background: rgba(255, 255, 255, .05);
+    border: 1px solid var(--borda); color: var(--suave); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+  .chip.por { color: #d8c6ff; border-color: rgba(145, 71, 255, .35); background: var(--roxo-fundo); }
   .chip.alerta { color: var(--vermelho-claro); border-color: rgba(255, 91, 107, .3); background: var(--vermelho-fundo); cursor: help; }
-  .chip.raio { color: var(--amarelo-claro); border-color: rgba(255, 197, 61, .28); background: var(--amarelo-fundo); }
-  .chip.enviado { color: #d6c2ff; border-color: rgba(145, 71, 255, .35); background: var(--roxo-fundo); }
+  .chip.raio { color: var(--amarelo-claro); border-color: rgba(255, 197, 61, .3); background: var(--amarelo-fundo); }
+  .chip.enviado { color: #d6c2ff; border-color: rgba(145, 71, 255, .38); background: var(--roxo-fundo); }
   .chip.pula { color: var(--vermelho-claro); }
-  .barra { height: 4px; background: rgba(255, 255, 255, .08); border-radius: 99px; overflow: hidden; margin-top: 12px; }
+  .chip.ok { color: var(--verde-claro); border-color: rgba(30, 215, 96, .22); background: var(--verde-fundo); }
+  .chip.so-icone { padding: 0 6px; } /* passo feito: só o check verde */
+  .chip.obrig { color: var(--vermelho-claro); border-color: rgba(255, 91, 107, .28); background: var(--vermelho-fundo); } /* passo obrigatório que falta */
+  .chip.opc { color: var(--amarelo-claro); border-color: rgba(255, 197, 61, .3); background: var(--amarelo-fundo); } /* passo opcional/recomendado que falta */
+  .chip.nao { color: var(--vermelho-claro); border-color: rgba(255, 91, 107, .28); background: var(--vermelho-fundo); }
+  .barra { height: 4px; background: rgba(255, 255, 255, .1); border-radius: 99px; overflow: hidden; }
   .barra div { height: 100%; width: 0; background: var(--verde); border-radius: 99px; transition: width 1s linear; }
-  .tempos { display: flex; justify-content: space-between; font-size: 11px; color: var(--fraco); margin-top: 4px; font-variant-numeric: tabular-nums; }
-  .controles { display: flex; align-items: center; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
-  .icone { width: 38px; height: 38px; border-radius: 50%; border: none; background: transparent; cursor: pointer; display: grid; place-items: center; color: var(--texto);
+  .progresso { display: flex; align-items: center; gap: 10px; font-size: 11.5px; color: var(--fraco); font-variant-numeric: tabular-nums; }
+  .progresso .barra { flex: 1 1 auto; }
+  .controles { display: flex; align-items: center; gap: 6px; min-width: 0; margin-top: 2px; }
+  .controles > *, .controles-dir > * { flex-shrink: 0; }
+  .controles-dir { margin-left: auto; display: flex; align-items: center; gap: 10px; min-width: 0; flex: 0 1 auto; }
+  .sep-v { width: 1px; height: 22px; background: var(--borda-forte); }
+  .volume[style*="none"] + .sep-v { display: none; }
+  .icone { width: 40px; height: 40px; border-radius: 50%; border: none; background: transparent; cursor: pointer; display: grid; place-items: center; color: var(--texto);
     transition: background-color 150ms ease, color 150ms ease, transform 160ms var(--ease-out), box-shadow 150ms ease; }
-  .icone:hover { background: rgba(255, 255, 255, .07); }
+  .icone:hover { background: rgba(255, 255, 255, .08); }
   .icone:active { transform: scale(.94); }
-  .icone.grande { width: 46px; height: 46px; background: var(--verde); color: #04140a; box-shadow: 0 8px 18px -8px rgba(0, 0, 0, .75); }
-  .icone.grande:hover { background: #3fe079; }
-  .icone.discreto { margin-left: auto; width: 32px; height: 32px; color: var(--fraco); }
+  .icone.grande { width: 48px; height: 48px; background: var(--verde); color: #04140a; box-shadow: 0 0 0 4px rgba(30, 215, 96, .14), 0 0 24px rgba(30, 215, 96, .55); }
+  .icone.grande:hover { background: #3fe079; box-shadow: 0 0 0 5px rgba(30, 215, 96, .18), 0 0 32px rgba(30, 215, 96, .7); }
+  .icone.discreto { width: 34px; height: 34px; color: var(--fraco); }
   .icone.discreto:hover { color: var(--vermelho); background: var(--vermelho-fundo); }
-  .volume { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 110px; color: var(--suave); padding: 0 6px; }
-  .volume input { flex: 1; accent-color: var(--verde); height: 4px; cursor: pointer; }
-  .linha-info { font-size: 12px; color: var(--suave); margin-top: 10px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .icone:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
+  .controles-dir .volume { display: flex; align-items: center; gap: 8px; flex: 0 1 170px; min-width: 100px; color: var(--suave); cursor: pointer; }
+  .volume .ic { flex-shrink: 0; }
+  .volume input { flex: 1 1 auto; width: 100%; min-width: 0; margin: 0; accent-color: var(--verde); cursor: pointer; }
+  .linha-info { font-size: 12.5px; color: var(--suave); margin-top: 8px; display: flex; gap: 14px; flex-wrap: wrap; }
   .linha-info:empty { display: none; }
+  #aparelho { color: var(--amarelo-claro); font-weight: 500; }
 
   /* ============ botões ============ */
-  .botao { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: rgba(255, 255, 255, .05); border: 1px solid var(--borda-forte); padding: 7px 14px; border-radius: var(--raio-p); cursor: pointer; font-weight: 600; text-decoration: none; color: var(--texto);
-    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 160ms var(--ease-out); }
-  .botao:hover { background: rgba(255, 255, 255, .09); border-color: rgba(255, 255, 255, .18); }
+  .botao { display: inline-flex; align-items: center; justify-content: center; gap: 7px; background: rgba(255, 255, 255, .05); border: 1px solid var(--borda-forte); padding: 8px 15px;
+    border-radius: var(--raio-p); cursor: pointer; font-weight: 600; text-decoration: none; color: var(--texto);
+    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 160ms var(--ease-out), box-shadow 150ms ease; }
+  .botao:hover { background: rgba(255, 255, 255, .09); border-color: rgba(255, 255, 255, .2); }
   .botao:active { transform: scale(.97); }
-  .botao.roxo { background: var(--roxo); border-color: transparent; color: #fff; box-shadow: 0 6px 16px -8px rgba(0, 0, 0, .7); }
-  .botao.roxo:hover { background: #8338f2; }
-  .botao.verde { background: var(--verde); border-color: transparent; color: #04140a; box-shadow: 0 6px 16px -8px rgba(0, 0, 0, .7); }
+  .botao.roxo { background: linear-gradient(135deg, var(--roxo), var(--roxo-escuro)); border-color: transparent; color: #fff; box-shadow: 0 0 18px rgba(145, 71, 255, .42); }
+  .botao.roxo:hover { background: linear-gradient(135deg, #8338f2, #6c22e0); box-shadow: 0 0 24px rgba(145, 71, 255, .6); }
+  .botao.verde { background: var(--verde); border-color: transparent; color: #04140a; box-shadow: 0 0 18px rgba(30, 215, 96, .32); }
   .botao.verde:hover { background: #3fe079; }
   .botao.pequeno { padding: 5px 11px; font-size: 13px; border-radius: 9px; }
   .botao.perigo:hover { border-color: rgba(255, 91, 107, .45); color: var(--vermelho-claro); background: var(--vermelho-fundo); }
-  .botao:disabled, .icone:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
+  .botao:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
+  .botao.desligar { color: var(--vermelho-claro); border-color: rgba(255, 91, 107, .5); background: rgba(255, 91, 107, .1); }
+  .botao.desligar .ic { color: var(--vermelho); }
+  .botao.desligar:hover { background: rgba(255, 91, 107, .2); border-color: rgba(255, 91, 107, .75); color: #ffd0d5; }
   .linha { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
   /* ============ fila ============ */
-  .fila { list-style: none; margin: 0 -8px; padding: 0; display: flex; flex-direction: column; gap: 2px; max-height: 520px; overflow: auto; }
-  .fila li { position: relative; display: flex; align-items: center; gap: 12px; border-radius: var(--raio-p); padding: 7px 8px; border: 1px solid transparent; min-width: 0; transition: background-color 120ms ease, opacity 150ms ease; }
-  .fila li:hover { background: rgba(255, 255, 255, .035); }
-  .fila li + li::before { content: ""; position: absolute; left: 10px; right: 10px; top: -2px; height: 1px; background: var(--borda); transition: opacity 120ms ease; }
+  .fila-cartao { padding: 0; overflow: hidden; display: flex; flex-direction: column; flex: 1 1 0; min-height: 150px; }
+  .fila-cartao > .fila { flex: 1 1 auto; min-height: 0; max-height: none; }
+  .fila-cartao > h2 { flex: none; font-size: 16px; padding: 12px 18px 10px; margin: 0; border-bottom: 1px solid var(--borda); background: rgba(255, 255, 255, .02); }
+  .fila { list-style: none; margin: 0; padding: 6px 12px; display: flex; flex-direction: column; gap: 2px; max-height: 560px; overflow: auto; }
+  .fila li { position: relative; display: flex; align-items: center; gap: 14px; border-radius: 12px; padding: 7px 10px; border: 1px solid transparent; min-width: 0; transition: background-color 120ms ease, opacity 150ms ease; }
+  .fila li:hover { background: rgba(255, 255, 255, .04); }
+  .fila li + li::before { content: ""; position: absolute; left: 12px; right: 12px; top: -2px; height: 1px; background: var(--borda); transition: opacity 120ms ease; }
   .fila li:hover::before, .fila li:hover + li::before { opacity: 0; }
   .fila li[draggable="true"] { cursor: grab; }
   .fila li[draggable="true"]:active { cursor: grabbing; }
@@ -178,63 +256,95 @@
   .fila li.marca-cima { border-top-color: var(--roxo); }
   .fila li.marca-baixo { border-bottom-color: var(--roxo); }
   .fila li.cancelada { opacity: .45; }
-  .fila .n { width: 18px; text-align: center; color: var(--fraco); font-weight: 600; flex: none; font-size: 12.5px; font-variant-numeric: tabular-nums; }
-  .fila img, .fila .semcapa { width: 42px; height: 42px; border-radius: 8px; flex: none; background: var(--painel2); object-fit: cover; }
-  .fila .semcapa { background: radial-gradient(120% 120% at 30% 20%, #241d3a, #19171f); border: 1px solid var(--borda); }
+  .fila .n { width: 18px; text-align: center; color: var(--suave); font-weight: 600; flex: none; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .fila img, .fila .semcapa { width: 46px; height: 46px; border-radius: 10px; flex: none; background: var(--painel2); object-fit: cover; box-shadow: 0 6px 14px -8px rgba(0, 0, 0, .8); }
+  .fila .semcapa { display: grid; place-items: center; color: var(--fraco); background: linear-gradient(135deg, #262236, #1a1824); border: 1px solid var(--borda); }
   .fila .info { flex: 1; min-width: 0; }
-  .fila .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; letter-spacing: -.005em; }
-  .fila .q { font-size: 12px; color: var(--suave); display: flex; gap: 6px; flex-wrap: wrap; align-items: center; min-width: 0; margin-top: 1px; }
-  .acoes { display: flex; gap: 1px; flex: none; opacity: .78; transition: opacity 150ms ease; }
+  .fila .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 650; font-size: 14.5px; letter-spacing: -.005em; }
+  .fila .t-linha { display: flex; align-items: center; gap: 6px; }
+  .fila .t-nome { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  /* "E" de explícita igual ao do Spotify: quadradinho cinza claro, letra escura, cantos de 2px, antes do nome */
+  .explicita { display: inline-flex; align-items: center; justify-content: center; flex: none; height: 16px; min-width: 16px; padding: 0 4px;
+    border-radius: 2px; background: #b3b3b3; color: #121212; font-size: 10.5px; font-weight: 700; line-height: 1; letter-spacing: 0; cursor: default; user-select: none; }
+  .linha-artista .explicita { margin-right: -4px; } /* fica a 6px do nome do artista, como no Spotify */
+  .fila .q { font-size: 12.5px; color: var(--suave); display: flex; gap: 7px; flex-wrap: wrap; align-items: center; min-width: 0; margin-top: 3px; }
+  .acoes { display: flex; gap: 2px; flex: none; opacity: .8; transition: opacity 150ms ease; }
   .fila li:hover .acoes, .acoes:focus-within { opacity: 1; }
-  .acoes button { background: none; border: none; color: var(--suave); cursor: pointer; padding: 6px; border-radius: 8px; display: grid; place-items: center;
+  .acoes button { background: none; border: none; color: var(--suave); cursor: pointer; padding: 7px; border-radius: 9px; display: grid; place-items: center;
     transition: background-color 120ms ease, color 120ms ease, transform 140ms var(--ease-out); }
-  .acoes button:hover { color: var(--texto); background: rgba(255, 255, 255, .07); }
+  .acoes button:hover { color: var(--texto); background: rgba(255, 255, 255, .08); }
   .acoes button:active { transform: scale(.92); }
   .acoes button.vermelho:hover { color: var(--vermelho); background: var(--vermelho-fundo); }
   .acoes button.verdinho:hover { color: var(--verde); background: var(--verde-fundo); }
-  .acoes .sep { width: 1px; background: var(--borda-forte); margin: 7px 4px; }
-  .vazio { color: var(--suave); text-align: center; padding: 30px 10px; line-height: 1.7; }
-  .teste { margin-top: 12px; padding-top: 14px; border-top: 1px solid var(--borda); }
+  .acoes .sep { width: 1px; background: var(--borda-forte); margin: 8px 4px; }
+  .vazio { color: var(--suave); text-align: center; padding: 24px 10px; line-height: 1.8; }
+  .teste { flex: none; display: flex; gap: 10px; padding: 10px 14px 12px; border-top: 1px solid var(--borda); flex-wrap: wrap; }
+  .campo-icone { position: relative; flex: 1; min-width: 180px; display: flex; }
+  .campo-icone .ic { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--fraco); pointer-events: none; }
+  .campo-icone input { padding-left: 38px !important; }
+  .teste .botao { padding: 8px 16px; font-size: 14px; }
+  .pendentes-cartao { padding: 0; overflow: hidden; flex: 0 1 auto; max-height: 42%; min-height: 0; display: flex; flex-direction: column; }
+  .pendentes-cartao > .fila { min-height: 0; }
+  .pendentes-cartao > h2 { flex: none; font-size: 16px; padding: 12px 18px 8px; margin: 0; }
 
   /* ============ formulários ============ */
   input[type=text], input[type=number], textarea, select {
-    width: 100%; background: var(--campo); border: 1px solid var(--borda-forte); border-radius: var(--raio-p); padding: 8px 11px; outline: none;
+    width: 100%; background: var(--campo); border: 1px solid var(--borda-forte); border-radius: var(--raio-p); padding: 9px 12px; outline: none;
     transition: border-color 150ms ease, box-shadow 150ms ease; }
   input::placeholder, textarea::placeholder { color: #8a889c; }
-  input[type=text]:hover, input[type=number]:hover, textarea:hover, select:hover { border-color: rgba(255, 255, 255, .18); }
+  input[type=text]:hover, input[type=number]:hover, textarea:hover, select:hover { border-color: rgba(255, 255, 255, .2); }
   input:focus, textarea:focus, select:focus { border-color: var(--roxo); box-shadow: 0 0 0 3px rgba(145, 71, 255, .22); }
   input[readonly] { color: var(--suave); }
-  select { cursor: pointer; }
+  /* caixas de escolha: setinha própria, com o mesmo respiro da borda que o "seg/min/%" dos outros campos */
+  select { cursor: pointer; appearance: none; -webkit-appearance: none; padding-right: 40px; text-overflow: ellipsis;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a19eb3' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center; background-size: 16px 16px; }
+  select:focus { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b994ff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); }
+  select option { background: #1d1a29; color: var(--texto); }
   textarea { min-height: 70px; resize: vertical; line-height: 1.55; }
   label.campo { display: block; margin-bottom: 14px; }
-  label.campo > span { display: block; font-weight: 600; font-size: 13px; margin-bottom: 6px; }
+  label.campo > span:not(.com-unidade) { display: block; font-weight: 600; font-size: 13px; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* unidade fixa dentro do campo (seg, min, %): a pessoa digita só o número */
+  .com-unidade { position: relative; display: block; }
+  .com-unidade input { padding-right: 46px; appearance: textfield; -moz-appearance: textfield; }
+  .com-unidade input::-webkit-inner-spin-button, .com-unidade input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  .com-unidade > i { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-style: normal; font-size: 13px; color: var(--fraco); pointer-events: none; }
   label.campo small, .dica { display: block; color: var(--suave); font-size: 12px; margin-top: 4px; line-height: 1.45; }
-  .campos2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0 14px; }
-  .check { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px; cursor: pointer; }
-  .check input { width: 17px; height: 17px; margin-top: 2px; accent-color: var(--roxo); flex: none; cursor: pointer; }
-  .check small { display: block; color: var(--suave); font-size: 12px; margin-top: 1px; }
+  .campos2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0 14px; }
+  .check { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; cursor: pointer; }
+  /* dica ao passar o mouse (no tema do app, sem a dica padrão do navegador) */
+  .com-dica { position: relative; width: fit-content; }
+  /* aparece do lado direito do texto, sem tampar as outras opções */
+  .com-dica::after { content: attr(data-dica); position: absolute; left: calc(100% + 14px); top: 50%; z-index: 10; width: max-content; max-width: 320px;
+    padding: 8px 11px; border-radius: 10px; background: #221d33; border: 1px solid rgba(185, 148, 255, .35); box-shadow: 0 14px 30px -12px rgba(0, 0, 0, .9);
+    color: #ebe7f6; font-size: 12.5px; font-weight: 400; line-height: 1.45; white-space: normal; pointer-events: none;
+    opacity: 0; transform: translate(-4px, -50%); transition: opacity 120ms ease, transform 160ms var(--ease-out); }
+  .com-dica::before { content: ""; position: absolute; left: calc(100% + 9.5px); top: 50%; z-index: 11; width: 9px; height: 9px; background: #221d33;
+    border-left: 1px solid rgba(185, 148, 255, .35); border-bottom: 1px solid rgba(185, 148, 255, .35);
+    opacity: 0; pointer-events: none; transform: translate(-4px, -50%) rotate(45deg); transition: opacity 120ms ease, transform 160ms var(--ease-out); }
+  .com-dica:hover::after, .com-dica:focus-within::after { opacity: 1; transform: translate(0, -50%); transition-delay: 120ms; }
+  .com-dica:hover::before, .com-dica:focus-within::before { opacity: 1; transform: translate(0, -50%) rotate(45deg); transition-delay: 120ms; }
+  .check input { width: 20px; height: 20px; margin-top: 1px; accent-color: var(--roxo); flex: none; cursor: pointer; }
+  .check > span { font-weight: 600; }
+  .check small { display: block; color: var(--suave); font-size: 12.5px; font-weight: 400; margin-top: 1px; }
 
   /* ============ sincronização ============ */
-  details.sync { background: var(--painel); border: 1px solid var(--borda); border-radius: var(--raio); margin-bottom: 14px; box-shadow: var(--sombra); transition: border-color 200ms ease; }
-  details.sync.destaque { border-color: rgba(145, 71, 255, .55); background: linear-gradient(180deg, rgba(145, 71, 255, .07), transparent 140px), var(--painel); }
-  details.sync > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 13px 16px; flex-wrap: wrap; user-select: none; border-radius: var(--raio); }
+  details.sync { margin-bottom: 18px; }
+  details.sync.destaque::before { background: linear-gradient(150deg, rgba(200, 160, 255, .9), rgba(145, 71, 255, .35) 45%, rgba(120, 150, 255, .45)); }
+  details.sync > summary { position: relative; list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 14px 18px; flex-wrap: wrap; user-select: none; border-radius: var(--raio); }
   details.sync > summary::-webkit-details-marker { display: none; }
   details.sync > summary > .ic { color: var(--roxo-claro); }
-  details.sync > summary b { font-size: 15px; font-weight: 650; }
+  details.sync > summary b { font-size: 16px; font-weight: 700; }
   details.sync > summary .seta { color: var(--suave); margin-left: auto; transition: transform 200ms var(--ease-out); }
   details.sync[open] > summary .seta { transform: rotate(180deg); }
   .selo { font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 99px; background: var(--roxo); color: #fff; }
   .estados { display: flex; gap: 6px; flex-wrap: wrap; }
-  .estados .chip.ok { color: var(--verde-claro); border-color: rgba(30, 215, 96, .22); background: var(--verde-fundo); }
-  .estados .chip.nao { color: var(--vermelho-claro); border-color: rgba(255, 91, 107, .28); background: var(--vermelho-fundo); }
-  .passo { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 0 14px; padding: 16px; border-top: 1px solid var(--borda); }
+  .passo { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 0 14px; padding: 16px 18px; border-top: 1px solid var(--borda); }
   .passo .num { width: 28px; height: 28px; border-radius: 50%; background: var(--painel2); border: 1px solid var(--borda-forte); display: grid; place-items: center; font-weight: 650; font-size: 13px; color: var(--suave); }
   .passo.feito .num { background: var(--verde-fundo); border-color: rgba(30, 215, 96, .3); color: var(--verde); }
   .passo h3 { margin: 3px 0 10px; font-size: 15px; font-weight: 650; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .passo h3 .chip { font-size: 11px; }
   details.passos-box { background: rgba(255, 255, 255, .03); border: 1px solid var(--borda); border-radius: var(--raio-p); padding: 9px 12px; margin-bottom: 12px; }
   details.passos-box summary { cursor: pointer; font-weight: 600; color: var(--roxo-claro); border-radius: 6px; }
-  details.passos-box summary:hover { color: #d4bcff; }
   .passos { margin: 10px 0 4px; padding-left: 20px; color: #d6d4e0; }
   .passos li { margin-bottom: 7px; }
   .passos li::marker { color: var(--fraco); }
@@ -244,57 +354,108 @@
   .estado-con { padding: 9px 12px; border-radius: var(--raio-p); background: rgba(255, 255, 255, .04); border: 1px solid var(--borda); margin-bottom: 12px; color: #d6d4e0; }
   .estado-con.ok { background: var(--verde-fundo); border-color: rgba(30, 215, 96, .2); color: var(--verde-claro); }
 
-  /* overlay: opções */
-  .opcoes-overlay { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; margin-bottom: 12px; }
+  /* overlay: miniatura do overlay real */
+  .opcoes-overlay { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; margin-bottom: 12px; }
   .opcao { background: rgba(255, 255, 255, .03); border: 1px solid var(--borda); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
   .opcao b { font-size: 14px; font-weight: 600; }
-  .mini { background: linear-gradient(135deg, #2a3442, #232838); border-radius: 8px; height: 76px; padding: 9px; display: flex; flex-direction: column; gap: 5px; align-items: flex-start; }
-  .direita-on .mini { align-items: flex-end; }
-  .mini .c { width: 62%; height: 26px; border-radius: 6px; border: 2px solid; border-image: linear-gradient(90deg, var(--roxo), #ff4fd8, var(--verde)) 1; background: rgba(14, 12, 24, .85); }
-  .mini .f { width: 62%; height: 30px; border-radius: 5px; background: rgba(14, 12, 24, .7); }
+  .opcao .linha { margin-top: auto; }
+  .mini { position: relative; overflow: hidden; border-radius: 10px; background: radial-gradient(140% 120% at 80% 20%, #3a4252, #1d222c 70%), #1d222c; border: 1px solid var(--borda); }
+  .mini iframe { position: absolute; top: 0; left: 0; border: 0; pointer-events: none; transform-origin: 0 0; background: transparent; color-scheme: light; }
 
-  /* registro */
-  .registro { font: 12px/1.6 "Cascadia Mono", Consolas, monospace; background: rgba(0, 0, 0, .35); border: 1px solid var(--borda); border-radius: var(--raio-p); padding: 10px 12px; height: 220px; overflow: auto; white-space: pre-wrap; word-break: break-word; color: #cfcdda; margin-top: 12px; }
+  /* stream deck */
+  .lista-deck { list-style: none; margin: 12px 0 8px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+  .lista-deck li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: rgba(255, 255, 255, .03); border: 1px solid var(--borda); }
+  .lista-deck li .ic { color: var(--roxo-claro); }
+  .lista-deck li span { flex: 1; font-weight: 500; font-size: 13px; }
+
+  /* registro / histórico: barra discreta no rodapé, fechada por padrão */
+  .registro { font: 12.5px/1.75 "Cascadia Mono", Consolas, monospace; background: #0a0910; border: 1px solid rgba(255, 255, 255, .08); border-left: 3px solid var(--roxo);
+    border-radius: 12px; padding: 10px 14px; max-height: 220px; overflow: auto; white-space: pre-wrap; word-break: break-word; color: #e6e4ef; }
+  .rodape-log { flex: none; position: relative; z-index: 1; margin-top: 10px; border-radius: 12px; background: rgba(17, 14, 27, .94);
+    border: 1px solid var(--borda-forte); box-shadow: 0 -12px 30px -14px rgba(0, 0, 0, .8); backdrop-filter: blur(10px); }
+  .rodape-log > summary { list-style: none; cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px; padding: 8px 14px;
+    font-size: 12.5px; color: var(--suave); border-radius: 12px; transition: color 150ms ease, background-color 150ms ease; }
+  .rodape-log > summary::-webkit-details-marker { display: none; }
+  .rodape-log > summary:hover { color: var(--texto); background: rgba(255, 255, 255, .03); }
+  /* mesma regra dos cartões: fechado aponta pra baixo (aperta pra abrir), aberto vira pra cima */
+  .rodape-log > summary .seta { margin-left: auto; color: var(--suave); transition: transform 200ms var(--ease-out); }
+  .rodape-log[open] > summary .seta { transform: rotate(180deg); }
+  .rodape-log .registro { margin: 0 10px 10px; max-height: 170px; }
   .registro .h { color: var(--fraco); }
-  details.cartao > summary { cursor: pointer; list-style: none; border-radius: 6px; }
-  details.cartao > summary h2 { margin: 0; }
-  details.cartao > summary::-webkit-details-marker { display: none; }
-
-  .aviso { background: var(--amarelo-fundo); border: 1px solid rgba(255, 197, 61, .25); color: var(--amarelo-claro); padding: 9px 10px 9px 14px; border-radius: 12px; margin-bottom: 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: space-between; }
 
   /* interruptor */
-  .switch { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12.5px; color: var(--suave); user-select: none; }
+  .switch { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--texto); user-select: none; white-space: nowrap; flex: none; }
   .switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-  .switch b { width: 34px; height: 20px; border-radius: 99px; background: #3a2630; position: relative; flex: none; transition: background-color 200ms ease; }
-  .switch b::after { content: ""; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .4); transition: transform 220ms var(--ease-out); }
-  .switch input:checked + b { background: var(--verde); }
-  .switch input:checked + b::after { transform: translateX(14px); }
+  .switch b { width: 44px; height: 24px; border-radius: 99px; background: #3a2630; position: relative; flex: none; transition: background-color 200ms ease; }
+  .switch b::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .4); transition: transform 220ms var(--ease-out); }
+  .switch input:checked + b { background: var(--roxo); }
+  .switch input:checked + b::after { transform: translateX(20px); }
   .switch input:focus-visible + b { outline: 2px solid var(--roxo-claro); outline-offset: 2px; }
-  .switch:active b::after { width: 17px; }
-  .switch input:checked:active + b::after { transform: translateX(11px); }
+  .switch.pequeno { font-size: 12.5px; font-weight: 500; color: var(--suave); }
+  .switch.pequeno b { width: 34px; height: 20px; }
+  .switch.pequeno b::after { width: 14px; height: 14px; }
+  .switch.pequeno input:checked + b::after { transform: translateX(14px); }
 
   /* avisos */
-  .toast { position: fixed; right: 18px; bottom: 18px; max-width: 420px; background: #22202c; border: 1px solid var(--borda-forte); padding: 11px 16px; border-radius: 12px; box-shadow: 0 16px 36px -14px rgba(0, 0, 0, .8);
+  .toast { position: fixed; right: 18px; bottom: 18px; max-width: 420px; background: #221f2d; border: 1px solid var(--borda-forte); padding: 11px 16px; border-radius: 12px; box-shadow: 0 16px 36px -14px rgba(0, 0, 0, .8);
     opacity: 0; transform: translateY(12px); transition: opacity 240ms var(--ease-out), transform 300ms var(--ease-out); pointer-events: none; z-index: 30; }
   .toast.mostrar { opacity: 1; transform: none; }
   #foraDoAr { position: fixed; inset: 0; z-index: 20; background: rgba(8, 7, 12, .94); backdrop-filter: blur(6px); display: grid; place-items: center; text-align: center; padding: 24px; }
-  #foraDoAr h2 { font-size: 22px; color: var(--texto); margin: 14px 0 8px; display: block; }
+  #foraDoAr h2 { font-size: 22px; margin: 14px 0 8px; display: block; }
   #foraDoAr p { color: var(--suave); margin: 0; line-height: 1.6; }
+
+  /* janela de novidades */
+  .modal-fundo { position: fixed; inset: 0; z-index: 25; display: grid; place-items: center; padding: 20px; background: rgba(6, 5, 10, .72); backdrop-filter: blur(4px); animation: fundoEntra 200ms ease-out; }
+  .modal { position: relative; width: min(460px, 100%); max-height: calc(100vh - 40px); overflow: auto; padding: 22px 22px 18px; border-radius: 18px;
+    border: 1px solid rgba(185, 148, 255, .35); background: linear-gradient(150deg, rgba(145, 71, 255, .18), rgba(26, 22, 38, .98) 38%, rgba(20, 18, 30, .98));
+    box-shadow: 0 30px 60px -20px rgba(0, 0, 0, .9); animation: modalEntra 260ms var(--ease-out); }
+  .modal-topo { display: flex; gap: 14px; align-items: center; margin-bottom: 16px; }
+  .modal-topo img { flex: none; }
+  .modal-topo h2 { margin: 0 0 2px; font-size: 18px; }
+  .modal-topo p { margin: 0; color: var(--suave); font-size: 13px; }
+  .novidades-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+  .novidades-lista li { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; line-height: 1.45; color: #e2e0ea; }
+  .novidades-lista li .ic { color: var(--verde); margin-top: 3px; }
+  .modal-acoes { display: flex; justify-content: flex-end; margin-top: 18px; }
+  @keyframes modalEntra { from { opacity: 0; transform: translateY(8px) scale(.97); } }
+  @keyframes fundoEntra { from { opacity: 0; } }
 
   /* ajuda */
   table.cmds { width: 100%; border-collapse: collapse; }
   table.cmds td { padding: 9px 6px; border-bottom: 1px solid var(--borda); vertical-align: top; }
   table.cmds tr:last-child td { border-bottom: none; }
   table.cmds td:first-child { width: 46%; line-height: 1.9; }
-  table.cmds code { white-space: nowrap; }
   table.cmds td:nth-child(2) { color: var(--suave); white-space: nowrap; }
+  table.cmds code { white-space: nowrap; }
   .recompensa { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 0; border-bottom: 1px solid var(--borda); }
   .recompensa:last-of-type { border-bottom: none; }
   .recompensa b { flex: 1; min-width: 130px; display: inline-flex; align-items: center; gap: 7px; font-weight: 600; }
   .recompensa input[type=number] { width: 100px; }
   .ajuda-icones li { display: flex; gap: 10px; align-items: flex-start; }
-  .ajuda-icones li .ic { margin-top: 2px; color: var(--suave); }
+  .ajuda-icones li .ic { margin-top: 2px; color: var(--roxo-claro); }
   .notas { white-space: pre-wrap; background: rgba(255, 255, 255, .03); border: 1px solid var(--borda); border-radius: 8px; padding: 9px 11px; font-size: 12px; color: #d6d4e0; max-height: 140px; overflow: auto; }
+
+  /* ============ janela estreita: o menu vira uma barra de ícones ============ */
+  @media (max-width: 760px) {
+    .app { grid-template-columns: 68px minmax(0, 1fr); }
+    .lateral { padding: 16px 10px; gap: 16px; align-items: center; }
+    .marca b, .marca small, .menu .rotulo, .status-cartao small, .status-cartao b { display: none; }
+    .marca img { width: 40px; height: 40px; margin: 0; }
+    .menu button { justify-content: center; padding: 12px; }
+    .menu .bolinha { position: absolute; top: 4px; right: 2px; margin: 0; }
+    .status-cartao { padding: 8px 6px; justify-content: center; gap: 6px; }
+    .st-logo { width: 24px; height: 24px; }
+    .barra-topo { padding: 12px 14px; gap: 10px; }
+    main { padding: 12px 14px; }
+    .hero { padding: 14px; }
+    .capa { width: 96px; height: 96px; }
+  }
+  @media (max-width: 720px) {
+    .barra-topo { flex-wrap: nowrap; }
+    .botao.desligar { padding: 8px 10px; }
+    .botao.desligar .txt { display: none; }
+  }
+  @media (max-width: 560px) { #abertosTxt { display: none; } }
 
   /* quem pede menos movimento no Windows */
   @media (prefers-reduced-motion: reduce) {
@@ -303,341 +464,376 @@
 </style>
 </head>
 <body>
-<div class="topo">
-<header>
-  <div class="logo"><img src="/icone.png" alt="" width="34" height="34"><span>StreamBeats</span><small>Twitch Song Request</small></div>
-  <div class="pilula" id="pSpotify" data-dica="Spotify"><i></i><span>Spotify</span></div>
-  <div class="pilula" id="pChat" data-dica="Chat"><i></i><span>Chat</span></div>
-  <span class="salvo" id="salvoInd"><i class="ic p" data-ic="check"></i>salvo</span>
-  <div class="espaco"></div>
-  <button class="botao pequeno verde" id="btAtualizacao" hidden><i class="ic p" data-ic="download"></i><span></span></button>
-  <label class="switch" title="Abrir ou fechar os pedidos do chat">
-    <input type="checkbox" id="abertos" checked><b></b><span id="abertosTxt">Pedidos abertos</span>
-  </label>
-  <button class="botao pequeno perigo" id="desligar" title="Desliga o app de verdade (fechar esta janela não desliga)"><i class="ic p" data-ic="power"></i>Desligar</button>
-</header>
-
-<nav>
-  <button data-aba="player" class="ativo"><i class="ic" data-ic="music"></i>Player &amp; Fila<span class="bolinha" id="bolPend" hidden></span></button>
-  <button data-aba="moderacao"><i class="ic" data-ic="shield"></i>Moderação</button>
-  <button data-aba="config"><i class="ic" data-ic="sliders"></i>Configurar<span class="bolinha" id="bolSync" hidden>!</span></button>
-  <button data-aba="ajuda"><i class="ic" data-ic="help"></i>Ajuda</button>
-</nav>
-</div>
-
-<main>
-  <!-- ======================= PLAYER & FILA ======================= -->
-  <section class="aba ativa" id="aba-player">
-    <div class="aviso" id="avisoConfig" hidden>
-      <span id="avisoTxt">Falta configurar.</span>
-      <button class="botao pequeno" data-ir="config">Ir para a Sincronização</button>
+<div class="app">
+  <!-- ======================= MENU LATERAL ======================= -->
+  <aside class="lateral">
+    <div class="marca"><img src="/icone.png" alt="" width="50" height="50"><b>StreamBeats</b><small>Twitch Song Request</small></div>
+    <nav class="menu">
+      <button data-aba="reproducao" class="ativo" title="Reprodução"><i class="ic" data-ic="play"></i><span class="rotulo">Reprodução</span><span class="bolinha" id="bolPend" hidden></span></button>
+      <button data-aba="moderacao" title="Moderação"><i class="ic" data-ic="escudo"></i><span class="rotulo">Moderação</span></button>
+      <button data-aba="config" title="Configuração"><i class="ic" data-ic="engrenagem"></i><span class="rotulo">Configuração</span><span class="bolinha" id="bolSync" hidden>!</span></button>
+      <button data-aba="ajuda" title="Ajuda"><i class="ic" data-ic="help"></i><span class="rotulo">Ajuda</span></button>
+    </nav>
+    <div class="status-cartoes">
+      <button class="status-cartao" id="stTwitch" type="button" data-cor="vermelho" title="Clique para reconectar">
+        <span class="st-txt"><span class="st-linha"><i class="ponto"></i><b>Desconectado</b></span>
+        <small>Sem canal</small></span>
+        <span class="st-logo logo-twitch"></span>
+      </button>
+      <button class="status-cartao" id="stSpotify" type="button" data-cor="vermelho" title="Clique para reconectar">
+        <span class="st-txt"><span class="st-linha"><i class="ponto"></i><b>Desconectado</b></span>
+        <small>Spotify</small></span>
+        <span class="st-logo logo-spotify"></span>
+      </button>
     </div>
+  </aside>
 
-    <div class="grade">
-      <div class="coluna">
-        <div class="cartao">
-          <div class="tocando">
+  <div class="conteudo">
+    <header class="barra-topo">
+      <h1 class="titulo-aba" id="tituloAba">Reprodução</h1>
+      <div class="espaco"></div>
+      <button class="botao pequeno verde" id="btAtualizacao" hidden><i class="ic p" data-ic="download"></i><span></span></button>
+      <label class="switch" title="Abrir ou fechar os pedidos do chat">
+        <input type="checkbox" id="abertos" checked><b></b><span id="abertosTxt">Pedidos Abertos</span>
+      </label>
+      <button class="botao desligar" id="desligar" title="Desliga o app de verdade (fechar esta janela não desliga)"><i class="ic" data-ic="power"></i><span class="txt">Desligar</span></button>
+    </header>
+
+    <main>
+      <!-- ======================= REPRODUÇÃO ======================= -->
+      <section class="aba ativa" id="aba-reproducao">
+        <div class="cartao hero" id="hero">
+          <div class="hero-onda"></div>
+          <div class="hero-player" id="heroPlayer">
             <div class="capa vazia" id="capa"></div>
             <div class="info">
               <div class="titulo" id="tNome">Nada tocando</div>
-              <div class="sub" id="tArtista"></div>
-              <div class="chips" id="tChips"></div>
-              <div class="barra"><div id="tBarra"></div></div>
-              <div class="tempos"><span id="tAgora">0:00</span><span id="tTotal">0:00</span></div>
+              <div class="linha-artista"><span class="explicita" id="tExplicita" title="Marcada como explícita no Spotify" hidden>E</span><span class="sub" id="tArtista"></span><span class="chips" id="tChips"></span></div>
+              <div class="progresso"><span id="tAgora">0:00</span><div class="barra"><div id="tBarra"></div></div><span id="tTotal">0:00</span></div>
+              <div class="controles">
+                <button class="icone" id="btVoltar" title="Voltar (1º clique: começo da música · 2º clique: música anterior)"><i class="ic" data-ic="voltar"></i></button>
+                <button class="icone grande" id="btPlay" title="Tocar / pausar"><i class="ic g" data-ic="play"></i></button>
+                <button class="icone" id="btPular" title="Pular música"><i class="ic" data-ic="pular"></i></button>
+                <div class="controles-dir">
+                  <label class="volume" id="volumeBox" title="Volume do Spotify"><i class="ic" data-ic="volume"></i><input type="range" id="volume" min="0" max="100" value="50"></label>
+                  <span class="sep-v"></span>
+                  <button class="icone discreto" id="btBanir" title="Banir esta música: pula e ninguém consegue pedir de novo"><i class="ic p" data-ic="ban"></i></button>
+                </div>
+              </div>
             </div>
-          </div>
-          <div class="controles">
-            <button class="icone" id="btVoltar" title="Voltar (1º clique: começo da música · 2º clique: música anterior)"><i class="ic" data-ic="voltar"></i></button>
-            <button class="icone grande" id="btPlay" title="Tocar / pausar"><i class="ic g" data-ic="play"></i></button>
-            <button class="icone" id="btPular" title="Pular música"><i class="ic" data-ic="pular"></i></button>
-            <label class="volume" id="volumeBox" title="Volume do Spotify"><i class="ic" data-ic="volume"></i><input type="range" id="volume" min="0" max="100" value="50"></label>
-            <button class="icone discreto" id="btBanir" title="Banir esta música: pula e ninguém consegue pedir de novo"><i class="ic p" data-ic="ban"></i></button>
           </div>
           <div class="linha-info"><span id="votos"></span><span id="aparelho"></span><span id="earrapeInfo"></span></div>
         </div>
 
-        <div class="cartao" id="cartaoPendentes" hidden>
-          <h2><i class="ic p" data-ic="relogio"></i>Esperando aprovação <span id="qtdPend"></span></h2>
-          <ul class="fila" id="pendentes"></ul>
+        <div class="reproducao-fila">
+            <div class="cartao pendentes-cartao" id="cartaoPendentes" hidden>
+              <h2><i class="ic" data-ic="relogio"></i>Esperando aprovação <span class="qtd" id="qtdPend"></span></h2>
+              <ul class="fila" id="pendentes"></ul>
+            </div>
+            <div class="cartao fila-cartao">
+              <h2><i class="ic" data-ic="lista"></i>Fila de pedidos <span class="qtd" id="qtd"></span></h2>
+              <ul class="fila" id="fila"></ul>
+              <form id="formTeste" class="teste">
+                <label class="campo-icone"><i class="ic" data-ic="music"></i><input type="text" id="teste" placeholder="Dynamite - BTS"></label>
+                <button class="botao roxo" type="submit">Enviar Pedido<i class="ic p" data-ic="play"></i></button>
+              </form>
+            </div>
         </div>
 
-        <details class="cartao" id="regBox">
-          <summary><h2><i class="ic p" data-ic="arquivo"></i>Registro <small id="regTxt">clique para abrir</small></h2></summary>
+        <details class="rodape-log" id="regBox">
+          <summary><i class="ic p" data-ic="arquivo"></i><span id="regTxt">Registro / Histórico — clique para expandir</span><i class="ic seta" data-ic="seta"></i></summary>
           <div class="registro" id="registro"></div>
         </details>
-      </div>
-
-      <div class="cartao">
-        <h2><i class="ic p" data-ic="lista"></i>Fila de pedidos <span id="qtd"></span><small>arraste para reordenar</small></h2>
-        <ul class="fila" id="fila"></ul>
-        <form id="formTeste" class="linha teste">
-          <input type="text" id="teste" placeholder="Testar um pedido: ex. dynamite - BTS" style="flex:1;min-width:160px">
-          <button class="botao roxo pequeno" type="submit">Pedir</button>
-        </form>
-      </div>
-    </div>
-  </section>
-
-  <!-- ======================= MODERAÇÃO ======================= -->
-  <section class="aba" id="aba-moderacao">
-    <div class="sanfonas">
-      <section class="bloco">
-        <div class="bloco-titulo"><i class="ic" data-ic="usuarios"></i>Quem pode pedir<span class="desc">subs, aprovação, explícitas</span></div>
-        <div class="corpo">
-          <label class="check"><input type="checkbox" name="somente_subs_e_vips"><span>Só subs, VIPs e mods<small>Os outros recebem um aviso no chat.</small></span></label>
-          <label class="check"><input type="checkbox" name="aprovar_pedidos"><span>Aprovar pedidos antes de tocar<small>Os pedidos esperam você aprovar na aba Player &amp; Fila. Pedidos de mods e de pontos do canal entram direto.</small></span></label>
-          <label class="check"><input type="checkbox" name="bloquear_explicitas"><span>Bloquear músicas explícitas</span></label>
-        </div>
       </section>
 
-      <section class="bloco">
-        <div class="bloco-titulo"><i class="ic" data-ic="relogio"></i>Limites<span class="desc" id="descLimites"></span></div>
-        <div class="corpo">
-          <div class="campos2">
-            <label class="campo"><span>Espera entre pedidos (s)</span><input type="number" name="cooldown_segundos" min="0"><small>Mods não esperam.</small></label>
-            <label class="campo"><span>Pedidos por pessoa</span><input type="number" name="max_pedidos_por_pessoa" min="1"></label>
-            <label class="campo"><span>Pedidos por sub/VIP</span><input type="number" name="max_pedidos_subs" min="1"></label>
-            <label class="campo"><span>Tamanho máximo da fila</span><input type="number" name="max_fila_total" min="1"></label>
-            <label class="campo"><span>Duração máxima (min)</span><input type="number" name="duracao_maxima_minutos" min="0"><small>0 = sem limite</small></label>
-            <label class="campo"><span>Votos para pular</span><input type="number" name="votos_para_pular" min="0"><small>!voteskip · 0 = desligado</small></label>
-          </div>
-        </div>
-      </section>
-
-      <section class="bloco">
-        <div class="bloco-titulo"><i class="ic" data-ic="volume"></i>Volume, earrape e furar fila<span class="desc">comandos do chat</span></div>
-        <div class="corpo">
-          <div class="campos2">
-            <label class="campo"><span>Quem muda o volume</span>
-              <select name="permissao_volume"><option value="mods">Só mods</option><option value="subs">Subs, VIPs e mods</option><option value="todos">Todos</option></select>
-              <small>!volume 50 · !vol+ · !vol-</small></label>
-            <label class="campo"><span>Volume máximo pelo chat (%)</span><input type="number" name="volume_max_chat" min="0" max="100"><small>O earrape ignora esse limite.</small></label>
-            <label class="campo"><span>Quem usa !earrape e !furarfila</span>
-              <select name="permissao_extras"><option value="desligado">Ninguém (desligado)</option><option value="mods">Só mods</option><option value="vips">VIPs e mods</option><option value="subs">Subs, VIPs e mods</option><option value="todos">Todos</option></select>
-              <small>Os pontos do canal funcionam à parte.</small></label>
-            <label class="campo"><span>Duração do earrape (s)</span><input type="number" name="earrape_segundos" min="1" max="60"></label>
-            <label class="campo"><span>Espera entre earrapes (min)</span><input type="number" name="earrape_espera_minutos" min="0"><small>Vale pro canal todo. Mods não esperam.</small></label>
-            <label class="campo"><span>Espera pra furar fila (min)</span><input type="number" name="furarfila_espera_minutos" min="0"><small>Por pessoa. Mods não esperam.</small></label>
-          </div>
-        </div>
-      </section>
-
-      <section class="bloco">
-        <div class="bloco-titulo"><i class="ic" data-ic="bandeira"></i>Bandeira vermelha<span class="desc">avisa, mas deixa entrar</span></div>
-        <div class="corpo">
-          <p class="dica" style="margin-top:0">A música <b>entra na fila</b>, mas aparece marcada pra você decidir. Passe o mouse na bandeira pra ver o motivo.</p>
-          <label class="campo"><span>Termos que acendem a bandeira</span><textarea name="palavras_alerta" placeholder="Um por linha" style="min-height:100px"></textarea></label>
-        </div>
-      </section>
-
-      <section class="bloco">
-        <div class="bloco-titulo"><i class="ic" data-ic="ban"></i>Bloqueios<span class="desc">nem entram na fila</span></div>
-        <div class="corpo">
-          <div class="campos2" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">
-            <label class="campo"><span>Músicas / artistas com estes termos</span><textarea name="palavras_bloqueadas" placeholder="Um por linha"></textarea></label>
-            <label class="campo"><span>Usuários bloqueados</span><textarea name="usuarios_bloqueados" placeholder="Um por linha"></textarea></label>
-          </div>
-        </div>
-      </section>
-
-      <section class="bloco">
-        <div class="bloco-titulo"><i class="ic" data-ic="ban"></i>Músicas banidas<span class="desc" id="qtdBan"></span></div>
-        <div class="corpo"><ul class="fila" id="banidas"></ul></div>
-      </section>
-    </div>
-  </section>
-
-  <!-- ======================= CONFIGURAR ======================= -->
-  <section class="aba" id="aba-config">
-    <details class="sync" id="sync">
-      <summary>
-        <i class="ic" data-ic="link"></i><b>Sincronização</b><span class="selo" id="syncSelo">comece por aqui</span>
-        <span class="estados" id="syncEstados"></span>
-        <i class="ic seta" data-ic="seta"></i>
-      </summary>
-
-      <div class="passo" id="passo1">
-        <div class="num">1</div>
-        <div>
-          <h3>Conectar o Spotify <span class="chip" id="spChip"></span></h3>
-          <div class="estado-con" id="spEstado">Não conectado</div>
-          <details class="passos-box" id="spPassos">
-            <summary>Passo a passo (só uma vez)</summary>
-            <ol class="passos">
-              <li>Abra <a href="https://developer.spotify.com/dashboard" target="_blank">developer.spotify.com/dashboard</a> e entre com a conta do Spotify. O site é só em inglês.</li>
-              <li>Clique em <b>Create app</b> (criar app). Em <b>App name</b> e <b>App description</b>, coloque qualquer coisa.</li>
-              <li>Em <b>Redirect URIs</b>, cole <span class="copiar" data-copiar="spotify" title="Clique para copiar"></span> e clique em <b>Add</b> (adicionar).</li>
-              <li>Em <b>Which API/SDKs</b>, marque <b>Web API</b>. Marque que aceita os termos e clique em <b>Save</b> (salvar).</li>
-              <li>Copie o <b>Client ID</b> que aparece na próxima tela e cole abaixo.</li>
-            </ol>
-          </details>
-          <label class="campo"><span>Client ID do Spotify</span>
-            <input type="text" name="spotify_client_id" placeholder="32 letras e números" autocomplete="off" spellcheck="false">
-            <small>Não é senha: sozinho ele não dá acesso a nada.</small>
-          </label>
-          <div class="linha">
-            <button class="botao verde" type="button" id="conectarSpotify">Conectar Spotify</button>
-            <button class="botao perigo" type="button" id="desconSpotify" hidden>Desconectar</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="passo" id="passo2">
-        <div class="num">2</div>
-        <div>
-          <h3>Canal da Twitch <span class="chip" id="canalChip"></span></h3>
-          <label class="campo"><span>Nome do canal</span>
-            <input type="text" name="canal_twitch" placeholder="ex.: meucanal" autocomplete="off" spellcheck="false">
-            <small>O nome do link: twitch.tv/<b>meucanal</b></small>
-          </label>
-        </div>
-      </div>
-
-      <div class="passo" id="passo3">
-        <div class="num">3</div>
-        <div>
-          <h3>Entrar na Twitch <span class="chip">recomendado</span> <span class="chip" id="twChip"></span></h3>
-          <p class="dica" style="margin-top:0">Faz o bot responder no chat ("entrou na fila", "não achei") e libera os pontos do canal. Sem isso, os pedidos funcionam, mas as respostas só aparecem no Registro.</p>
-          <div class="estado-con" id="twEstado">Não conectado</div>
-          <details class="passos-box" id="twPassos">
-            <summary>Passo a passo (só uma vez)</summary>
-            <ol class="passos">
-              <li>Abra <a href="https://dev.twitch.tv/console" target="_blank">dev.twitch.tv/console</a> e clique em <b>Registre seu aplicativo</b>.</li>
-              <li><b>Nome</b>: qualquer nome único (ex.: StreamBeats-seucanal).</li>
-              <li><b>URLs de redirecionamento OAuth</b>: cole <span class="copiar" data-copiar="twitch" title="Clique para copiar"></span> e clique em <b>Adicionar</b>. Se sobrar uma linha vazia, clique em <b>Remover</b> nela, senão o botão <b>Criar</b> fica apagado.</li>
-              <li><b>Categoria</b>: Chat Bot. <b>Tipo de cliente</b>: Público. Clique em <b>Criar</b>.</li>
-              <li>Na lista, clique em <b>Gerenciar</b>, copie o <b>ID do cliente</b> e cole abaixo.</li>
-            </ol>
-          </details>
-          <label class="campo"><span>ID do cliente da Twitch</span>
-            <input type="text" name="twitch_client_id" autocomplete="off" spellcheck="false">
-          </label>
-          <label class="check"><input type="checkbox" name="responder_no_chat"><span>Responder no chat da Twitch</span></label>
-          <div class="linha">
-            <button class="botao roxo" type="button" id="conectarTwitch">Entrar na Twitch</button>
-            <button class="botao perigo" type="button" id="desconTwitch" hidden>Sair</button>
-          </div>
-          <small class="dica">Entre com <b>a conta do canal</b> pra liberar os pontos do canal. Também dá pra usar uma conta de bot (aí só responde no chat).</small>
-        </div>
-      </div>
-    </details>
-
-    <div class="sanfonas">
-      <section class="bloco" id="secOverlay">
-        <div class="bloco-titulo"><i class="ic" data-ic="monitor"></i>Overlay no OBS<span class="desc">a música aparecendo na live</span></div>
-        <div class="corpo" id="overlayCorpo">
-          <p class="dica" style="margin-top:0">No OBS: <b>Fontes → + → Navegador</b>, cole o link e use o tamanho indicado.</p>
-          <div class="opcoes-overlay">
-            <div class="opcao">
-              <div class="mini"><div class="c"></div></div>
-              <b>Só a música tocando</b>
-              <span class="dica" style="margin:0">Largura <b>500</b> · Altura <b>140</b></span>
-              <div class="linha"><input type="text" id="urlOverlay" readonly style="flex:1;min-width:120px"><button class="botao pequeno" type="button" data-copiar-campo="urlOverlay"><i class="ic p" data-ic="copiar"></i>Copiar</button></div>
+      <!-- ======================= MODERAÇÃO ======================= -->
+      <section class="aba" id="aba-moderacao">
+        <div class="grade-blocos">
+          <details class="bloco" open id="secQuem">
+            <summary class="bloco-titulo"><i class="ic" data-ic="music"></i>Regras de pedidos<i class="ic seta" data-ic="seta"></i></summary>
+            <div class="corpo">
+              <label class="check com-dica" data-dica="Viewers comuns receberão um aviso no chat de que os pedidos estão restritos apenas para Subs, VIPs e Mods."><input type="checkbox" name="somente_subs_e_vips"><span>Permitir apenas Subs, VIPs e Mods</span></label>
+              <label class="check com-dica" data-dica="Os pedidos ficam aguardando sua aprovação na aba Reprodução. Mods e pontos do canal entram direto."><input type="checkbox" name="aprovar_pedidos"><span>Aprovar pedidos antes de tocar</span></label>
+              <label class="check com-dica" data-dica="Músicas marcadas como 'Explícito' (E) no Spotify são recusadas automaticamente."><input type="checkbox" name="bloquear_explicitas"><span>Bloquear conteúdo explícito</span></label>
             </div>
-            <div class="opcao">
-              <div class="mini"><div class="c"></div><div class="f"></div></div>
-              <b>Música tocando + próximas 3 da fila</b>
-              <span class="dica" style="margin:0">Largura <b>500</b> · Altura <b>300</b></span>
-              <div class="linha"><input type="text" id="urlOverlayFila" readonly style="flex:1;min-width:120px"><button class="botao pequeno" type="button" data-copiar-campo="urlOverlayFila"><i class="ic p" data-ic="copiar"></i>Copiar</button></div>
+          </details>
+
+          <details class="bloco" open id="secLimites">
+            <summary class="bloco-titulo"><i class="ic" data-ic="relogio"></i>Limites<i class="ic seta" data-ic="seta"></i></summary>
+            <div class="corpo">
+              <div class="campos2">
+                <label class="campo"><span>Intervalo entre pedidos</span><span class="com-unidade"><input type="number" name="cooldown_segundos" min="0"><i>seg</i></span><small>Moderadores estão isentos desse tempo.</small></label>
+                <label class="campo"><span>Pedidos por pessoa</span><input type="number" name="max_pedidos_por_pessoa" min="1"></label>
+                <label class="campo"><span>Pedidos por sub/VIP</span><input type="number" name="max_pedidos_subs" min="1"></label>
+                <label class="campo"><span>Tamanho máximo da fila</span><input type="number" name="max_fila_total" min="1"></label>
+                <label class="campo"><span>Duração máxima da música</span><span class="com-unidade"><input type="number" name="duracao_maxima_minutos" min="0"><i>min</i></span><small>0 = sem limite</small></label>
+                <label class="campo"><span>Votos para pular</span><input type="number" name="votos_para_pular" min="0"><small>!voteskip · 0 = desligado</small></label>
+              </div>
+            </div>
+          </details>
+
+          <details class="bloco" open id="secVolume">
+            <summary class="bloco-titulo"><i class="ic" data-ic="volume"></i>Volume e Comandos Especiais<i class="ic seta" data-ic="seta"></i></summary>
+            <div class="corpo">
+              <div class="campos2">
+                <label class="campo"><span>Quem muda o volume</span>
+                  <select name="permissao_volume"><option value="mods">Só mods</option><option value="subs">Subs, VIPs e mods</option><option value="todos">Todos</option></select></label>
+                <label class="campo"><span>Volume máximo pelo chat</span><span class="com-unidade"><input type="number" name="volume_max_chat" min="0" max="100"><i>%</i></span><small>O earrape ignora esse limite.</small></label>
+                <label class="campo"><span>Quem usa !earrape e !furarfila</span>
+                  <select name="permissao_extras"><option value="desligado">Ninguém (desligado)</option><option value="mods">Só mods</option><option value="vips">VIPs e mods</option><option value="subs">Subs, VIPs e mods</option><option value="todos">Todos</option></select></label>
+                <label class="campo"><span>Duração do earrape</span><span class="com-unidade"><input type="number" name="earrape_segundos" min="1" max="60"><i>seg</i></span></label>
+                <label class="campo"><span>Tempo de recarga do earrape</span><span class="com-unidade"><input type="number" name="earrape_espera_minutos" min="0"><i>min</i></span></label>
+                <label class="campo"><span>Tempo de recarga para furar fila</span><span class="com-unidade"><input type="number" name="furarfila_espera_minutos" min="0"><i>min</i></span></label>
+              </div>
+            </div>
+          </details>
+
+          <details class="bloco" open id="secBandeira">
+            <summary class="bloco-titulo"><i class="ic" data-ic="bandeira"></i>Bandeira vermelha<i class="ic seta" data-ic="seta"></i></summary>
+            <div class="corpo">
+              <p class="dica" style="margin-top:0">A música <b>entra na fila</b>, mas aparece marcada pra você decidir. Passe o mouse na bandeira pra ver o motivo.</p>
+              <label class="campo"><span>Termos que acendem a bandeira</span><textarea name="palavras_alerta" placeholder="Um termo por linha (ex: gemidão, earrape, bass boosted)" style="min-height:110px"></textarea></label>
+            </div>
+          </details>
+
+          <details class="bloco" open id="secBloqueios">
+            <summary class="bloco-titulo"><i class="ic" data-ic="ban"></i>Bloqueios<i class="ic seta" data-ic="seta"></i></summary>
+            <div class="corpo">
+              <label class="campo"><span>Músicas / artistas com estes termos</span><textarea name="palavras_bloqueadas" placeholder="Um termo por linha (ex: anitta, justin bieber)"></textarea></label>
+              <label class="campo"><span>Viewers bloqueados</span><textarea name="usuarios_bloqueados" placeholder="Um nome da Twitch por linha (ex: fulano123)"></textarea><small>O app ignora tudo que eles mandarem no chat: pedidos, comandos e resgates de pontos.</small></label>
+            </div>
+          </details>
+
+          <details class="bloco" open id="secBanidas">
+            <summary class="bloco-titulo"><i class="ic" data-ic="ban"></i>Músicas banidas<i class="ic seta" data-ic="seta"></i></summary>
+            <div class="corpo"><ul class="fila" id="banidas" style="padding:0"></ul></div>
+          </details>
+
+        </div>
+      </section>
+
+      <!-- ======================= CONFIGURAÇÃO ======================= -->
+      <section class="aba" id="aba-config">
+        <details class="sync" id="sync">
+          <summary>
+            <i class="ic" data-ic="link"></i><b>Status da Sincronização</b><span class="selo" id="syncSelo">comece por aqui</span>
+            <span class="estados" id="syncEstados"></span>
+            <i class="ic seta" data-ic="seta"></i>
+          </summary>
+
+          <div class="passo" id="passo1">
+            <div class="num">1</div>
+            <div>
+              <h3>Conectar o Spotify <span class="chip" id="spChip"></span></h3>
+              <div class="estado-con" id="spEstado">Não conectado</div>
+              <details class="passos-box" id="spPassos">
+                <summary>Passo a passo (só uma vez)</summary>
+                <ol class="passos">
+                  <li>Abra <a href="https://developer.spotify.com/dashboard" target="_blank">developer.spotify.com/dashboard</a> e entre com a conta do Spotify. O site é só em inglês.</li>
+                  <li>Clique em <b>Create app</b> (criar app). Em <b>App name</b> e <b>App description</b>, coloque qualquer coisa.</li>
+                  <li>Em <b>Redirect URIs</b>, cole <span class="copiar" data-copiar="spotify" title="Clique para copiar"></span> e clique em <b>Add</b> (adicionar).</li>
+                  <li>Em <b>Which API/SDKs</b>, marque <b>Web API</b>. Marque que aceita os termos e clique em <b>Save</b> (salvar).</li>
+                  <li>Copie o <b>Client ID</b> que aparece na próxima tela e cole abaixo.</li>
+                </ol>
+              </details>
+              <label class="campo"><span>Client ID do Spotify</span>
+                <input type="text" name="spotify_client_id" placeholder="32 letras e números" autocomplete="off" spellcheck="false">
+                <small>Não é senha: sozinho ele não dá acesso a nada.</small>
+              </label>
+              <div class="linha">
+                <button class="botao verde" type="button" id="conectarSpotify">Conectar Spotify</button>
+                <button class="botao perigo" type="button" id="desconSpotify" hidden>Desconectar</button>
+              </div>
             </div>
           </div>
-          <label class="check"><input type="checkbox" id="overlayDireita"><span>Alinhar à direita<small>Muda os dois links. Copie de novo depois de marcar.</small></span></label>
-        </div>
-      </section>
 
-      <section class="bloco" id="secPontos">
-        <div class="bloco-titulo"><i class="ic" data-ic="presente"></i>Pontos do canal<span class="desc" id="descPontos">pedido, furar fila e earrape</span></div>
-        <div class="corpo">
-          <div id="pontosApi"></div>
-          <details class="passos-box" id="pontosManual">
-            <summary>Usar recompensas criadas à mão na Twitch</summary>
-            <ol class="passos">
-              <li>Na Twitch: <b>Painel do criador → Recompensas dos espectadores → Pontos do canal → Gerenciar recompensas</b> e crie a recompensa.</li>
-              <li>Ligue <b>"Exigir que o espectador insira texto"</b> (é ali que vai o nome da música; no Earrape também precisa ligar).</li>
-              <li>Clique em <b>Detectar</b> aqui embaixo e resgate a recompensa uma vez no seu chat.</li>
-            </ol>
-            <small class="dica">Nesse modo o app não consegue desligar a recompensa nem devolver os pontos sozinho.</small>
-            <div id="pontosManualLista"></div>
+          <div class="passo" id="passo2">
+            <div class="num">2</div>
+            <div>
+              <h3>Canal da Twitch <span class="chip" id="canalChip"></span></h3>
+              <label class="campo"><span>Nome do canal</span>
+                <input type="text" name="canal_twitch" placeholder="ex.: meucanal" autocomplete="off" spellcheck="false">
+                <small>O nome do link: twitch.tv/<b>meucanal</b></small>
+              </label>
+            </div>
+          </div>
+
+          <div class="passo" id="passo3">
+            <div class="num">3</div>
+            <div>
+              <h3>Entrar na Twitch <span class="chip opc" id="twChip">recomendado</span></h3>
+              <p class="dica" style="margin-top:0">Faz o bot responder no chat e libera os pontos do canal. Sem isso, os pedidos funcionam, mas sem avisos no chat.</p>
+              <div class="estado-con" id="twEstado">Não conectado</div>
+              <details class="passos-box" id="twPassos">
+                <summary>Passo a passo (só uma vez)</summary>
+                <ol class="passos">
+                  <li>Abra <a href="https://dev.twitch.tv/console" target="_blank">dev.twitch.tv/console</a> e clique em <b>Registre seu aplicativo</b>.</li>
+                  <li><b>Nome</b>: qualquer nome único (ex.: StreamBeats-seucanal).</li>
+                  <li><b>URLs de redirecionamento OAuth</b>: cole <span class="copiar" data-copiar="twitch" title="Clique para copiar"></span> e clique em <b>Adicionar</b>. Se sobrar uma linha vazia, clique em <b>Remover</b> nela, senão o botão <b>Criar</b> fica apagado.</li>
+                  <li><b>Categoria</b>: Chat Bot. <b>Tipo de cliente</b>: Público. Clique em <b>Criar</b>.</li>
+                  <li>Na lista, clique em <b>Gerenciar</b>, copie o <b>ID do cliente</b> e cole abaixo.</li>
+                </ol>
+              </details>
+              <label class="campo"><span>ID do cliente da Twitch</span>
+                <input type="text" name="twitch_client_id" autocomplete="off" spellcheck="false">
+              </label>
+              <label class="check"><input type="checkbox" name="responder_no_chat"><span>Responder no chat da Twitch</span></label>
+              <div class="linha">
+                <button class="botao roxo" type="button" id="conectarTwitch">Entrar na Twitch</button>
+                <button class="botao perigo" type="button" id="desconTwitch" hidden>Sair</button>
+              </div>
+              <small class="dica">Entre com <b>a conta do canal</b> pra liberar os pontos do canal. Também dá pra usar uma conta de bot (aí só responde no chat).</small>
+            </div>
+          </div>
+
+          <div class="passo" id="passo4">
+            <div class="num">4</div>
+            <div>
+              <h3>Pontos do canal <span class="chip opc" id="pontosChip">opcional</span></h3>
+              <p class="dica" style="margin-top:0">Permite usar pontos do canal nos pedidos (os pedidos pelo chat funcionam normalmente sem isso)</p>
+            <div id="pontosApi"></div>
+            <details class="passos-box" id="pontosManual">
+              <summary>Usar recompensas criadas à mão na Twitch</summary>
+              <ol class="passos">
+                <li>Na Twitch: <b>Painel do criador → Recompensas dos espectadores → Pontos do canal → Gerenciar recompensas</b> e crie a recompensa.</li>
+                <li>Ligue <b>"Exigir que o espectador insira texto"</b> (é ali que vai o nome da música; no Earrape também precisa ligar).</li>
+                <li>Clique em <b>Detectar</b> aqui embaixo e resgate a recompensa uma vez no seu chat.</li>
+              </ol>
+              <small class="dica">Nesse modo o app não consegue desligar a recompensa nem devolver os pontos sozinho.</small>
+              <div id="pontosManualLista"></div>
+            </details>
+            </div>
+          </div>
+        </details>
+
+        <div class="grade-blocos">
+          <details class="bloco" open id="secOverlay">
+            <summary class="bloco-titulo"><i class="ic" data-ic="monitor"></i>Overlay no OBS<i class="ic seta" data-ic="seta"></i></summary>
+            <div class="corpo" id="overlayCorpo">
+              <p style="margin:0 0 2px;font-weight:600">Como adicionar ao OBS Studio:</p>
+              <ol class="passos" style="margin:6px 0 14px"><li>No OBS, adicione uma nova fonte do tipo <b>Navegador</b>.</li><li>Cole o link copiado abaixo.</li><li>Defina a largura e a altura indicadas para o layout desejado.</li></ol>
+              <div class="opcoes-overlay">
+                <div class="opcao">
+                  <div class="mini" data-overlay="so"></div>
+                  <b>Só a música tocando</b>
+                  <span class="dica" style="margin:0">Largura <b>500</b> · Altura <b>140</b></span>
+                  <div class="linha"><input type="text" id="urlOverlay" readonly style="flex:1;min-width:110px"><button class="botao pequeno" type="button" data-copiar-campo="urlOverlay"><i class="ic p" data-ic="copiar"></i>Copiar</button></div>
+                </div>
+                <div class="opcao">
+                  <div class="mini" data-overlay="fila=1"></div>
+                  <b>Música tocando + próximas 3 da fila</b>
+                  <span class="dica" style="margin:0">Largura <b>500</b> · Altura <b>300</b></span>
+                  <div class="linha"><input type="text" id="urlOverlayFila" readonly style="flex:1;min-width:110px"><button class="botao pequeno" type="button" data-copiar-campo="urlOverlayFila"><i class="ic p" data-ic="copiar"></i>Copiar</button></div>
+                </div>
+              </div>
+              <label class="check"><input type="checkbox" id="overlayDireita"><span>Alinhamento à direita<small>Aplica-se a ambos os layouts. Lembre-se de copiar o link novamente após alterar esta opção.</small></span></label>
+              <label class="check"><input type="checkbox" name="esconder_overlay_pausado"><span>Esconder o overlay quando a música estiver pausada</span></label>
+            </div>
+          </details>
+
+          <details class="bloco" open id="secDeck">
+            <summary class="bloco-titulo"><i class="ic" data-ic="deck"></i>Stream Deck<i class="ic seta" data-ic="seta"></i></summary>
+            <div class="corpo">
+              <p class="dica" style="margin-top:0">Controle o StreamBeats pelos botões do seu Stream Deck (Fifine D6/AmpliGame, Elgato e outros) ou por atalhos do Windows.</p>
+              <ol class="passos">
+                <li>Clique em <b>Criar atalhos</b>. Abre uma pasta com um atalho pra cada comando.</li>
+                <li>No programa do Stream Deck, <b>arraste cada atalho pra um botão</b> (ou use a ação de abrir programa/arquivo e escolha o atalho).</li>
+                <li>Pronto: apertar o botão manda o comando pro StreamBeats, sem abrir janela.</li>
+              </ol>
+              <div class="linha"><button class="botao roxo" type="button" id="criarAtalhos"><i class="ic p" data-ic="pasta"></i>Criar atalhos</button></div>
+              <ul class="lista-deck" id="listaDeck"></ul>
+              <small class="dica">O "Pular música" daqui respeita a fila de pedidos. As teclas de mídia comuns pulam pra próxima da playlist do Spotify.</small>
+            </div>
+          </details>
+
+          <details class="bloco" open id="secHistorico">
+            <summary class="bloco-titulo"><i class="ic" data-ic="disco"></i>Histórico da live<i class="ic seta" data-ic="seta"></i></summary>
+            <div class="corpo">
+              <div class="estado-con" id="histEstado">Nenhuma música ainda.</div>
+              <div class="linha">
+                <button class="botao verde" type="button" id="criarPlaylist">Criar playlist no Spotify</button>
+                <button class="botao perigo" type="button" id="limparHist">Começar do zero</button>
+              </div>
+              <small class="dica" id="histDica"></small>
+            </div>
+          </details>
+
+          <details class="bloco" open id="secComandos">
+            <summary class="bloco-titulo"><i class="ic" data-ic="chat"></i>Nomes dos comandos<i class="ic seta" data-ic="seta"></i></summary>
+            <div class="corpo">
+              <p class="dica" style="margin-top:0">Separe por vírgula. Ex.: <code>!sr, !música</code></p>
+              <div class="campos2">
+                <label class="campo"><span>Pedir música</span><input type="text" data-cmd="pedir"></label>
+                <label class="campo"><span>O que está tocando</span><input type="text" data-cmd="tocando"></label>
+                <label class="campo"><span>Ver a fila</span><input type="text" data-cmd="fila"></label>
+                <label class="campo"><span>Tirar meu pedido</span><input type="text" data-cmd="remover"></label>
+                <label class="campo"><span>Votar para pular</span><input type="text" data-cmd="voteskip"></label>
+                <label class="campo"><span>Volume</span><input type="text" data-cmd="volume"></label>
+                <label class="campo"><span>Subir volume</span><input type="text" data-cmd="volmais"></label>
+                <label class="campo"><span>Baixar volume</span><input type="text" data-cmd="volmenos"></label>
+                <label class="campo"><span>Furar fila</span><input type="text" data-cmd="furarfila"></label>
+                <label class="campo"><span>Earrape</span><input type="text" data-cmd="earrape"></label>
+                <label class="campo"><span>Pular (mods)</span><input type="text" data-cmd="pular"></label>
+                <label class="campo"><span>Abrir pedidos (mods)</span><input type="text" data-cmd="abrir"></label>
+                <label class="campo"><span>Fechar pedidos (mods)</span><input type="text" data-cmd="fechar"></label>
+              </div>
+            </div>
+          </details>
+
+          <details class="bloco" open id="secAtualizacoes">
+            <summary class="bloco-titulo"><i class="ic" data-ic="download"></i>Atualizações<i class="ic seta" data-ic="seta"></i></summary>
+            <div class="corpo" id="atualizacoesCorpo"></div>
           </details>
         </div>
       </section>
 
-      <section class="bloco">
-        <div class="bloco-titulo"><i class="ic" data-ic="disco"></i>Histórico da live<span class="desc" id="descHist"></span></div>
-        <div class="corpo">
-          <div class="estado-con" id="histEstado">Nenhuma música ainda.</div>
-          <div class="linha">
-            <button class="botao verde" type="button" id="criarPlaylist">Criar playlist no Spotify</button>
-            <button class="botao perigo" type="button" id="limparHist">Começar do zero</button>
+      <!-- ======================= AJUDA ======================= -->
+      <section class="aba" id="aba-ajuda">
+        <div class="grade-blocos">
+          <div class="cartao">
+            <h2><i class="ic" data-ic="chat"></i>Comandos do chat</h2>
+            <table class="cmds" id="tabelaCmds"></table>
           </div>
-          <small class="dica" id="histDica"></small>
-        </div>
-      </section>
-
-      <section class="bloco">
-        <div class="bloco-titulo"><i class="ic" data-ic="chat"></i>Nomes dos comandos<span class="desc">!sr, !song, !fila...</span></div>
-        <div class="corpo">
-          <p class="dica" style="margin-top:0">Separe por vírgula. Ex.: <code>!sr, !música</code></p>
-          <div class="campos2">
-            <label class="campo"><span>Pedir música</span><input type="text" data-cmd="pedir"></label>
-            <label class="campo"><span>O que está tocando</span><input type="text" data-cmd="tocando"></label>
-            <label class="campo"><span>Ver a fila</span><input type="text" data-cmd="fila"></label>
-            <label class="campo"><span>Tirar meu pedido</span><input type="text" data-cmd="remover"></label>
-            <label class="campo"><span>Votar para pular</span><input type="text" data-cmd="voteskip"></label>
-            <label class="campo"><span>Volume</span><input type="text" data-cmd="volume"></label>
-            <label class="campo"><span>Subir volume</span><input type="text" data-cmd="volmais"></label>
-            <label class="campo"><span>Baixar volume</span><input type="text" data-cmd="volmenos"></label>
-            <label class="campo"><span>Furar fila</span><input type="text" data-cmd="furarfila"></label>
-            <label class="campo"><span>Earrape</span><input type="text" data-cmd="earrape"></label>
-            <label class="campo"><span>Pular (mods)</span><input type="text" data-cmd="pular"></label>
-            <label class="campo"><span>Abrir pedidos (mods)</span><input type="text" data-cmd="abrir"></label>
-            <label class="campo"><span>Fechar pedidos (mods)</span><input type="text" data-cmd="fechar"></label>
+          <div class="coluna">
+            <div class="cartao">
+              <h2><i class="ic" data-ic="play"></i>Botões</h2>
+              <ul class="passos ajuda-icones" style="list-style:none;padding:0">
+                <li><i class="ic" data-ic="voltar"></i><span><b>Voltar:</b> 1º clique volta pro começo da música, 2º clique vai pra anterior.</span></li>
+                <li><i class="ic" data-ic="pular"></i><span><b>Pular:</b> pula a música que está tocando.</span></li>
+                <li><i class="ic" data-ic="lixeira"></i><span><b>Tirar da fila:</b> tira aquele pedido da fila, sem banir.</span></li>
+                <li><i class="ic" data-ic="ban"></i><span><b>Banir:</b> tira e ninguém consegue pedir essa música de novo.</span></li>
+                <li><i class="ic" data-ic="topo"></i><span><b>Topo:</b> manda o pedido pro começo da fila.</span></li>
+                <li><i class="ic" data-ic="play"></i><span><b>Tocar agora:</b> bom pra quem mandou donate ou sub.</span></li>
+                <li><i class="ic" data-ic="arrastar"></i><span><b>Arrastar:</b> mude a ordem da fila segurando e arrastando.</span></li>
+                <li><i class="ic" data-ic="check"></i><span><b>Salvo:</b> as opções salvam sozinhas quando você muda. Aparece "Salvo ✓" no canto do cartão.</span></li>
+              </ul>
+            </div>
+            <div class="cartao">
+              <h2><i class="ic" data-ic="help"></i>Bom saber</h2>
+              <ul class="passos">
+                <li>Os cartões do canto esquerdo mostram a Twitch e o Spotify (verde, amarelo, cinza ou vermelho). Clique num deles pra conferir a conexão; se o login não valer mais, abre a Sincronização.</li>
+                <li>O Spotify precisa ser <b>Premium</b> e estar tocando no PC. Dê play numa playlist antes da live: quando os pedidos acabam, o Spotify volta pra ela sozinho.</li>
+                <li><b>Fechar esta janela não desliga o app.</b> Os pedidos continuam funcionando. Pra ver o painel de novo, abra o app outra vez. Pra desligar de verdade: botão <b>Desligar</b>, no topo.</li>
+                <li>A fila fica salva: se o app fechar ou o PC reiniciar, os pedidos continuam lá.</li>
+                <li>Deu algum problema? O arquivo <code>registro.log</code> nesta pasta guarda tudo que aconteceu: <code id="pasta"></code></li>
+                <li>Também dá pra mostrar a música no OBS com o arquivo <code>tocando_agora.txt</code>, na mesma pasta.</li>
+                <li>O arquivo <code>tokens.json</code> guarda os logins. <b>Não mande pra ninguém.</b></li>
+                <li>Ícones baseados no <a href="https://lucide.dev" target="_blank">Lucide</a> (licença ISC).</li>
+              </ul>
+            </div>
           </div>
         </div>
       </section>
-
-      <section class="bloco" id="secAtualizacoes">
-        <div class="bloco-titulo"><i class="ic" data-ic="download"></i>Atualizações<span class="desc" id="descVersao"></span></div>
-        <div class="corpo" id="atualizacoesCorpo"></div>
-      </section>
-    </div>
-  </section>
-
-  <!-- ======================= AJUDA ======================= -->
-  <section class="aba" id="aba-ajuda">
-    <div class="grade">
-      <div class="cartao">
-        <h2>Comandos do chat</h2>
-        <table class="cmds" id="tabelaCmds"></table>
-      </div>
-      <div class="coluna">
-        <div class="cartao">
-          <h2>Botões</h2>
-          <ul class="passos ajuda-icones" style="list-style:none;padding:0">
-            <li><i class="ic" data-ic="voltar"></i><span><b>Voltar:</b> 1º clique volta pro começo da música, 2º clique vai pra anterior.</span></li>
-            <li><i class="ic" data-ic="pular"></i><span><b>Pular:</b> no player, pula a música. Na fila, tira aquele pedido (sem banir).</span></li>
-            <li><i class="ic" data-ic="ban"></i><span><b>Banir:</b> tira e ninguém consegue pedir essa música de novo.</span></li>
-            <li><i class="ic" data-ic="topo"></i><span><b>Topo:</b> manda o pedido pro começo da fila.</span></li>
-            <li><i class="ic" data-ic="play"></i><span><b>Tocar agora:</b> bom pra quem mandou donate ou sub.</span></li>
-            <li><i class="ic" data-ic="arrastar"></i><span><b>Arrastar:</b> mude a ordem da fila segurando e arrastando.</span></li>
-          </ul>
-        </div>
-        <div class="cartao">
-          <h2>Bom saber</h2>
-          <ul class="passos">
-            <li>O Spotify precisa ser <b>Premium</b> e estar tocando no PC. Dê play numa playlist antes da live: quando os pedidos acabam, o Spotify volta pra ela sozinho.</li>
-            <li><b>Fechar esta janela não desliga o app.</b> Os pedidos continuam funcionando. Pra ver o painel de novo, abra o app outra vez. Pra desligar de verdade: botão <b>Desligar</b>, no topo.</li>
-            <li>A fila fica salva: se o app fechar ou o PC reiniciar, os pedidos continuam lá.</li>
-            <li>Deu algum problema? O arquivo <code>registro.log</code> nesta pasta guarda tudo que aconteceu: <code id="pasta"></code></li>
-            <li>Também dá pra mostrar a música no OBS com o arquivo <code>tocando_agora.txt</code>, na mesma pasta.</li>
-            <li>O arquivo <code>tokens.json</code> guarda os logins. <b>Não mande pra ninguém.</b></li>
-            <li>Ícones baseados no <a href="https://lucide.dev" target="_blank">Lucide</a> (licença ISC).</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </section>
-</main>
+    </main>
+  </div>
+</div>
+<div class="modal-fundo" id="novidades" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="novTitulo">
+    <div class="modal-topo"><img src="/icone.png" alt="" width="44" height="44"><div><h2 id="novTitulo">Novidades</h2><p id="novResumo"></p></div></div>
+    <ul class="novidades-lista" id="novLista"></ul>
+    <div class="modal-acoes"><button class="botao roxo" id="novOk" type="button">Entendi</button></div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 <div id="foraDoAr" hidden>
   <div>
@@ -668,12 +864,13 @@ const ICONES = {
   topo: '<path d="M5 3h14"/><path d="m18 13-6-6-6 6"/><path d="M12 7v14"/>',
   volume: '<path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>',
   music: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
-  shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  casa: '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
   sliders: '<line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/>',
   help: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
   power: '<path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/>',
   copiar: '<rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
   check: '<path d="M20 6 9 17l-5-5"/>',
+  alerta: '<path d="M12 9v4"/><path d="M12 17h.01"/>',
   bandeira: '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>',
   raio: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
   presente: '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5"/>',
@@ -686,12 +883,22 @@ const ICONES = {
   download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
   link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
   usuario: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
-  usuarios: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
   relogio: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
   disco: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="2"/>',
   desfazer: '<path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>',
   seguir: '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+  lapis: '<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>',
+  recarregar: '<path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/>',
+  deck: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  escudo: '<path d="M12 2.5 19.5 5.4V11c0 4.6-3 8.4-7.5 10.5C7.5 19.4 4.5 15.6 4.5 11V5.4Z" stroke-linejoin="miter"/>',
+  engrenagem: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+  lixeira: '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>',
+  pasta: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
 };
+const LOGO_SPOTIFY = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="currentColor"/>'
+  + '<path d="M6.3 9.2c3.7-1.1 8-.8 11.3 1.1" stroke="#0b0b0f" stroke-width="1.9" fill="none" stroke-linecap="round"/>'
+  + '<path d="M7 12.3c3-.8 6.3-.5 8.9 1" stroke="#0b0b0f" stroke-width="1.6" fill="none" stroke-linecap="round"/>'
+  + '<path d="M7.7 15.2c2.3-.6 4.8-.4 6.8.7" stroke="#0b0b0f" stroke-width="1.35" fill="none" stroke-linecap="round"/></svg>';
 const ic = (nome, extra) => `<i class="ic ${extra || ''}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICONES[nome] || ''}</svg></i>`;
 function pintarIcones(raiz) {
   (raiz || document).querySelectorAll('i[data-ic]').forEach((el) => {
@@ -700,6 +907,12 @@ function pintarIcones(raiz) {
   });
 }
 pintarIcones();
+// logo da Twitch simplificado; a cor vem do status (verde, cinza ou vermelho)
+const LOGO_TWITCH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.2 1.5 2.6 4.2v15.3h4.6V23l3.4-3.5h3.6l7.2-7.3V1.5z" fill="currentColor"/>'
+  + '<path d="M6.2 3.5h13.5v7.9l-3.2 3.3h-4.2l-2.8 2.9v-2.9H6.2z" fill="#0b0b0f"/>'
+  + '<path d="M10.8 6.4h1.9v4.9h-1.9zM15.4 6.4h1.9v4.9h-1.9z" fill="currentColor"/></svg>';
+$$('.logo-spotify').forEach((el) => el.innerHTML = LOGO_SPOTIFY);
+$$('.logo-twitch').forEach((el) => el.innerHTML = LOGO_TWITCH);
 
 // ------------------------------------------------ comunicação com o app
 let foraDoAr = false;
@@ -746,13 +959,20 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&':
 const mmss = (ms) => { const s = Math.max(0, Math.floor(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
 function mudou(chave, valor) { const j = JSON.stringify(valor); if (ultimos[chave] === j) return false; ultimos[chave] = j; return true; }
 
-// ------------------------------------------------ abas
+// ------------------------------------------------ menu
+const ABAS = ['reproducao', 'moderacao', 'config', 'ajuda'];
+const ABAS_ANTIGAS = { inicio: 'reproducao', player: 'reproducao', pedidos: 'moderacao', configurar: 'config' };
+const NOMES_ABAS = { reproducao: 'Reprodução', moderacao: 'Moderação', config: 'Configuração', ajuda: 'Ajuda' };
 function irPara(aba) {
-  $$('nav button').forEach((b) => b.classList.toggle('ativo', b.dataset.aba === aba));
+  aba = ABAS_ANTIGAS[aba] || aba; // nomes antigos
+  $('#tituloAba').textContent = NOMES_ABAS[aba] || '';
+  $$('.menu button').forEach((b) => b.classList.toggle('ativo', b.dataset.aba === aba));
   $$('.aba').forEach((s) => s.classList.toggle('ativa', s.id === 'aba-' + aba));
+  $('main').scrollTop = 0;
+  if (aba === 'config') setTimeout(() => montarMinis($('#overlayDireita').checked), 0);
 }
+function irParaSincronizacao() { irPara('config'); $('#sync').open = true; }
 $$('[data-aba]').forEach((b) => b.onclick = () => irPara(b.dataset.aba));
-$$('[data-ir]').forEach((b) => b.onclick = () => { irPara(b.dataset.ir); if (b.dataset.ir === 'config') $('#sync').open = true; });
 
 async function copiar(texto) {
   try { await navigator.clipboard.writeText(texto); toast('Copiado!'); } catch { toast('Selecione e copie com Ctrl+C'); }
@@ -761,7 +981,7 @@ $$('.copiar').forEach((el) => el.onclick = () => copiar(el.textContent));
 $$('[data-copiar-campo]').forEach((b) => b.onclick = () => copiar($('#' + b.dataset.copiarCampo).value));
 
 // ------------------------------------------------ configurações (salvam sozinhas)
-const camposConfig = () => $$('#aba-moderacao [name], #aba-config [name]');
+const camposConfig = () => $$('main [name]');
 function preencherForm(c) {
   for (const el of camposConfig()) {
     if (el === document.activeElement) continue;
@@ -779,19 +999,27 @@ function lerForm() {
   return c;
 }
 let salvando = Promise.resolve();
-function salvar() {
+function mostrarSalvo(el) {
+  const parte = el && el.closest('details');
+  const titulo = parte && parte.querySelector(':scope > summary');
+  if (!titulo) return;
+  let s = titulo.querySelector('.salvo-card');
+  if (!s) { s = document.createElement('span'); s.className = 'salvo-card'; s.innerHTML = 'Salvo ' + ic('check', 'p'); titulo.appendChild(s); }
+  s.classList.add('mostrar');
+  clearTimeout(s.timer); s.timer = setTimeout(() => s.classList.remove('mostrar'), 1600);
+}
+function salvar(el) {
   salvando = salvando.then(async () => {
-    await api('/api/config', { config: lerForm() });
+    const d = await api('/api/config', { config: lerForm() });
     await atualizar();
     preencherForm(est.config);
-    const s = $('#salvoInd'); s.classList.add('mostrar');
-    clearTimeout(salvar.t); salvar.t = setTimeout(() => s.classList.remove('mostrar'), 1600);
+    if (d && d.ok !== false) mostrarSalvo(el);
   }).catch(() => {});
   return salvando;
 }
 document.addEventListener('change', (e) => {
   const el = e.target;
-  if (el.closest('#aba-moderacao, #aba-config') && (el.name || el.dataset.cmd)) salvar();
+  if (el.closest('main') && (el.name || el.dataset.cmd)) salvar(el);
 });
 
 $('#conectarSpotify').onclick = async () => {
@@ -814,8 +1042,30 @@ $('#criarPlaylist').onclick = async () => {
 $('#limparHist').onclick = () => { if (confirm('Apagar o histórico e começar uma live nova?')) acao('limpar-historico'); };
 $('#overlayDireita').onchange = () => desenharOverlayLinks();
 $('#btAtualizacao').onclick = () => { irPara('config'); $('#secAtualizacoes').open = true; $('#secAtualizacoes').scrollIntoView({ block: 'nearest' }); };
+$('#criarAtalhos').onclick = () => { toast('Criando os atalhos...'); acao('criar-atalhos'); };
+$('#listaDeck').onclick = (e) => { const b = e.target.closest('[data-deck]'); if (b) acao('deck', { acao: b.dataset.deck }); };
+async function verificarConexao(servico) {
+  const cartao = $(servico === 'twitch' ? '#stTwitch' : '#stSpotify');
+  if (cartao.disabled) return;
+  cartao.disabled = true;
+  cartao.classList.add('verificando');
+  const inicio = Date.now();
+  try {
+    const d = await api('/api/verificar', { servico });
+    await atualizar();
+    const falta = 700 - (Date.now() - inicio); // o pulso aparece pelo menos um instante
+    if (falta > 0) await new Promise((r) => setTimeout(r, falta));
+    if (d && d.mensagem) toast(d.mensagem);
+    if (d && d.ok && !d.conectado) irParaSincronizacao();
+  } finally {
+    cartao.disabled = false;
+    cartao.classList.remove('verificando');
+  }
+}
+$('#stTwitch').onclick = () => verificarConexao('twitch');
+$('#stSpotify').onclick = () => verificarConexao('spotify');
 
-// pontos do canal (botões desenhados dinamicamente)
+// pontos do canal e atualizações (botões desenhados dinamicamente)
 document.addEventListener('click', (e) => {
   const b = e.target.closest('[data-pontos]');
   if (!b) return;
@@ -858,10 +1108,14 @@ $('#desligar').onclick = async () => {
 $('#formTeste').onsubmit = async (e) => {
   e.preventDefault();
   const t = $('#teste').value.trim(); if (!t) return;
-  await api('/api/teste', { texto: t }); $('#teste').value = ''; toast('Pedido enviado, veja o Registro.');
+  await api('/api/teste', { texto: t }); $('#teste').value = ''; toast('Pedido enviado, veja o Histórico.');
   setTimeout(atualizar, 1200);
 };
-$('#regBox').addEventListener('toggle', () => { $('#regTxt').textContent = $('#regBox').open ? 'clique para fechar' : 'clique para abrir'; });
+$('#regBox').addEventListener('toggle', () => {
+  const aberto = $('#regBox').open;
+  $('#regTxt').textContent = 'Registro / Histórico — ' + (aberto ? 'clique para fechar' : 'clique para expandir');
+  if (aberto) { const reg = $('#registro'); reg.scrollTop = reg.scrollHeight; }
+});
 
 // ------------------------------------------------ fila (botões e arrastar)
 function chipsDe(p, mostrarPor) {
@@ -869,9 +1123,10 @@ function chipsDe(p, mostrarPor) {
   if (mostrarPor && p.pedidoPor) c.push(`<span class="chip por">${ic('usuario', 'p')}pedida por ${esc(p.pedidoPor)}</span>`);
   if (p.prioridade) c.push(`<span class="chip raio">${ic('raio', 'p')}furou a fila</span>`);
   if (p.alerta) c.push(`<span class="chip alerta" title="Potencial música perigosa — termo detectado: ${esc(p.alerta)}">${ic('bandeira', 'p')}${esc(p.alerta)}</span>`);
-  if (p.explicita) c.push('<span class="chip" title="Marcada como explícita no Spotify">E</span>');
   return c.join('');
 }
+// "E" de explícita igual ao do Spotify, logo antes do nome
+const CHIP_EXPLICITA = '<span class="explicita" title="Marcada como explícita no Spotify">E</span>';
 function itemFila(p, i, tipo) {
   const fixo = tipo !== 'fila' || p.enviado;
   let acoes;
@@ -880,19 +1135,19 @@ function itemFila(p, i, tipo) {
       <button data-a="recusar" title="Recusar (sem banir)">${ic('x')}</button><span class="sep"></span>
       <button class="vermelho" data-a="banir" title="Banir esta música">${ic('ban', 'p')}</button>`;
   } else if (p.enviado) {
-    acoes = `<button data-a="remover" title="Pular este pedido (sem banir)">${ic('pular')}</button><span class="sep"></span>
+    acoes = `<button data-a="remover" title="Tirar da fila (sem banir)">${ic('lixeira')}</button><span class="sep"></span>
       <button class="vermelho" data-a="banir" title="Banir esta música">${ic('ban', 'p')}</button>`;
   } else {
     acoes = `<button data-a="topo" title="Mandar para o topo">${ic('topo')}</button>
       <button class="verdinho" data-a="tocar-agora" title="Tocar agora">${ic('play')}</button>
-      <button data-a="remover" title="Pular este pedido (tira da fila, sem banir)">${ic('pular')}</button><span class="sep"></span>
+      <button data-a="remover" title="Tirar da fila (sem banir)">${ic('lixeira')}</button><span class="sep"></span>
       <button class="vermelho" data-a="banir" title="Banir esta música">${ic('ban', 'p')}</button>`;
   }
   const estado = p.pular ? '<span class="chip pula">vai ser pulada</span>' : p.enviado ? `<span class="chip enviado">${ic('seguir', 'p')}a seguir no Spotify</span>` : '';
   return `<li data-id="${p.id}" data-idx="${i}" ${fixo ? '' : 'draggable="true"'} class="${p.pular ? 'cancelada' : ''}">
     <span class="n">${tipo === 'fila' ? i + 1 : '•'}</span>
-    ${p.imagem ? `<img src="${esc(p.imagem)}" alt="">` : '<span class="semcapa"></span>'}
-    <div class="info"><div class="t" title="${esc(p.titulo)}">${esc(p.titulo)}</div>
+    ${p.imagem ? `<img src="${esc(p.imagem)}" alt="">` : `<span class="semcapa">${ic('music')}</span>`}
+    <div class="info"><div class="t t-linha">${p.explicita ? CHIP_EXPLICITA : ''}<span class="t-nome" title="${esc(p.titulo)}">${esc(p.titulo)}</span></div>
       <div class="q">pedida por ${esc(p.pedidoPor)} ${estado}${chipsDe(p, false)}</div></div>
     <div class="acoes">${acoes}</div></li>`;
 }
@@ -949,9 +1204,9 @@ fila.addEventListener('dragend', fimArraste);
 function desenharOverlayLinks() {
   if (!est) return;
   const dir = $('#overlayDireita').checked;
-  $('#overlayCorpo').classList.toggle('direita-on', dir);
   $('#urlOverlay').value = est.urlOverlay + (dir ? '?lado=direita' : '');
   $('#urlOverlayFila').value = est.urlOverlay + '?fila=1' + (dir ? '&lado=direita' : '');
+  montarMinis(dir);
 }
 
 function desenharPontos(e) {
@@ -959,7 +1214,6 @@ function desenharPontos(e) {
   const api = c.recompensas_api;
   const criadas = ['pedido', 'prioridade', 'earrape'].filter((k) => api[k]);
   const nomes = { pedido: ['music', 'Pedir música'], prioridade: ['raio', 'Furar fila'], earrape: ['volume', 'Earrape'] };
-  $('#descPontos').textContent = criadas.length ? `${criadas.filter((k) => api[k].ligada).length} de ${criadas.length} ligadas` : 'pedido, furar fila e earrape';
   let html = '';
   if (e.twitch.podeApi) {
     html += `<div class="estado-con ${e.twitch.eventsub || !criadas.length ? 'ok' : ''}">${criadas.length
@@ -969,7 +1223,7 @@ function desenharPontos(e) {
       const r = api[k];
       html += `<div class="recompensa"><b>${ic(nomes[k][0], 'p')}${nomes[k][1]}</b>
         <label class="dica" style="margin:0">custo <input type="number" min="1" data-custo="${k}" value="${c.custos[k]}"></label>
-        ${r ? `<label class="switch"><input type="checkbox" data-ligar="${k}" ${r.ligada ? 'checked' : ''}><b></b><span>${r.ligada ? 'ligada' : 'desligada'}</span></label>` : '<span class="chip">ainda não criada</span>'}</div>`;
+        ${r ? `<label class="switch pequeno"><input type="checkbox" data-ligar="${k}" ${r.ligada ? 'checked' : ''}><b></b><span>${r.ligada ? 'ligada' : 'desligada'}</span></label>` : '<span class="chip">ainda não criada</span>'}</div>`;
     }
     html += `<div class="linha" style="margin-top:10px">
       ${criadas.length < 3 ? `<button class="botao roxo" data-pontos="criar">${ic('presente', 'p')}Criar recompensas na Twitch</button>` : ''}
@@ -989,32 +1243,32 @@ function desenharPontos(e) {
     const temId = !!c[`recompensa_${k}_id`];
     const aprendendo = e.aprendendoRecompensa === k;
     manual += `<div class="recompensa"><b>${ic(nomes[k][0], 'p')}${nomes[k][1]}</b>
-      <span class="chip ${aprendendo ? 'raio' : temId ? 'por' : ''}">${aprendendo ? 'resgate no chat agora...' : temId ? 'configurada' : 'não configurada'}</span>
+      <span class="chip ${aprendendo ? 'raio' : temId ? 'ok' : ''}">${aprendendo ? 'resgate no chat agora...' : temId ? 'configurada' : 'não configurada'}</span>
       <button class="botao pequeno" data-pontos="aprender" data-qual="${k}">${aprendendo ? 'Cancelar' : 'Detectar'}</button>
       ${temId ? `<button class="botao pequeno perigo" data-pontos="limpar" data-qual="${k}">Remover</button>` : ''}</div>`;
   }
   if (mudou('pontosManual', manual)) $('#pontosManualLista').innerHTML = manual;
+  const temPontos = criadas.length > 0 || ['pedido', 'prioridade', 'earrape'].some((k) => !!c[`recompensa_${k}_id`]);
+  $('#passo4').classList.toggle('feito', temPontos);
+  marcarPasso('#pontosChip', temPontos, 'opcional', 'opc');
 }
 
 function desenharAtualizacoes(e) {
-  $('#descVersao').textContent = 'versão ' + e.versao;
   const a = e.atualizacao;
   let html = `<div class="estado-con">Você está na versão <b>${esc(e.versao)}</b>.</div>`;
   if (!e.repoAtualizacao) {
     html += '<small class="dica">A atualização automática ainda não está ligada: falta configurar o repositório do GitHub do projeto.</small>';
+  } else if (a && a.nova) {
+    html += `<div class="estado-con ok">Versão <b>${esc(a.versao)}</b> disponível!</div>`;
+    if (a.notas) html += `<div class="notas">${esc(a.notas)}</div>`;
+    html += `<div class="linha" style="margin-top:10px">${e.ehExe
+      ? `<button class="botao verde" data-pontos="atualizar">${ic('download', 'p')}Atualizar agora</button>`
+      : `<a class="botao" href="${esc(a.pagina || '#')}" target="_blank">Abrir a página da versão nova</a>`}
+      <button class="botao pequeno" data-pontos="procurar">Procurar de novo</button></div>
+      <small class="dica">Suas configurações, logins e a fila continuam iguais depois de atualizar.</small>`;
   } else {
-    if (a && a.nova) {
-      html += `<div class="estado-con ok">Versão <b>${esc(a.versao)}</b> disponível!</div>`;
-      if (a.notas) html += `<div class="notas">${esc(a.notas)}</div>`;
-      html += `<div class="linha" style="margin-top:10px">${e.ehExe
-        ? `<button class="botao verde" data-pontos="atualizar">${ic('download', 'p')}Atualizar agora</button>`
-        : `<a class="botao" href="${esc(a.pagina || '#')}" target="_blank">Abrir a página da versão nova</a>`}
-        <button class="botao pequeno" data-pontos="procurar">Procurar de novo</button></div>
-        <small class="dica">Suas configurações, logins e a fila continuam iguais depois de atualizar.</small>`;
-    } else {
-      html += `<div class="linha"><button class="botao" data-pontos="procurar">${ic('download', 'p')}Procurar atualizações</button></div>`;
-      if (a && a.erro) html += `<small class="dica">${esc(a.erro)}</small>`;
-    }
+    html += `<div class="linha"><button class="botao" data-pontos="procurar">${ic('download', 'p')}Procurar atualizações</button></div>`;
+    if (a && a.erro) html += `<small class="dica">${esc(a.erro)}</small>`;
   }
   if (mudou('atualiz', html)) $('#atualizacoesCorpo').innerHTML = html;
   const btn = $('#btAtualizacao');
@@ -1022,53 +1276,74 @@ function desenharAtualizacoes(e) {
   if (a && a.nova) btn.querySelector('span').textContent = 'Atualização ' + a.versao;
 }
 
+// Etiqueta de cada passo da Sincronização: vermelha (obrigatório) ou amarela (recomendado/opcional)
+// enquanto falta fazer; check verde quando está feito.
+function marcarPasso(id, feito, texto, tipo) {
+  const el = $(id);
+  const chave = feito ? 'feito' : texto;
+  if (el.dataset.estado === chave) return;
+  el.dataset.estado = chave;
+  el.className = 'chip ' + (feito ? 'ok so-icone' : tipo);
+  el.innerHTML = feito ? ic('check', 'p') : esc(texto);
+  el.title = feito ? 'Feito' : '';
+}
+
+function desenharStatus(e) {
+  const c = e.config;
+  const pintar = (id, cor, status, linha, motivo) => {
+    const el = $(id);
+    el.dataset.cor = cor;
+    el.querySelector('b').textContent = status;
+    el.querySelector('small').textContent = linha;
+    el.title = (motivo ? motivo + '\n' : '') + 'Clique para reconectar';
+  };
+  // Twitch: verde = ao vivo · cinza = offline (lendo o chat) · vermelho = desconectado
+  const canal = c.canal_twitch ? '#' + c.canal_twitch : 'Sem canal';
+  if (!c.canal_twitch) pintar('#stTwitch', 'vermelho', 'Desconectado', 'Sem canal', 'Falta colocar o canal da Twitch na Sincronização.');
+  else if (!e.chat.conectado) pintar('#stTwitch', 'vermelho', 'Desconectado', canal, 'Não está conectado ao chat da Twitch.');
+  else if (e.twitch.aoVivo === true) pintar('#stTwitch', 'verde', 'Ao vivo', canal, 'A live está no ar.');
+  else if (e.twitch.aoVivo === false) pintar('#stTwitch', 'cinza', 'Offline', canal, 'Lendo o chat. A live não está no ar.');
+  else pintar('#stTwitch', 'cinza', 'Conectado', canal, 'Lendo o chat. Pra saber se a live está no ar, entre na Twitch (passo 3 da Sincronização).');
+  // Spotify: verde = tocando · amarelo = pausado · vermelho = fechado ou desconectado
+  const nome = 'Spotify: ' + (e.spotify.usuario || 'conectado');
+  if (!e.spotify.conectado) pintar('#stSpotify', 'vermelho', 'Desconectado', 'Spotify', e.spotify.erro || 'O Spotify não está conectado.');
+  else if (e.spotify.premium === false) pintar('#stSpotify', 'vermelho', 'Sem Premium', nome, 'Essa conta não é Premium: o Spotify só deixa adicionar na fila com Premium.');
+  else if (!e.spotify.aparelho) pintar('#stSpotify', 'vermelho', 'Desconectado', 'Spotify fechado', 'Abra o Spotify no PC e dê play em qualquer música.');
+  else if (e.player && e.player.tocando) pintar('#stSpotify', 'verde', 'Tocando', nome, '');
+  else pintar('#stSpotify', 'amarelo', 'Pausado', nome, '');
+}
+
 function desenhar() {
   const e = est;
   const c = e.config;
   const conectado = e.spotify.conectado;
-  // topo
-  const sp = $('#pSpotify');
-  sp.className = 'pilula ' + (conectado ? (e.spotify.aparelho ? 'ok' : 'meio') : '');
-  sp.querySelector('span').textContent = conectado ? 'Spotify: ' + (e.spotify.aparelho || 'sem aparelho tocando') : 'Spotify desconectado';
-  sp.dataset.dica = sp.querySelector('span').textContent;
-  const ch = $('#pChat');
-  ch.className = 'pilula ' + (e.chat.conectado ? 'ok' : e.chat.canal ? 'meio' : '');
-  ch.querySelector('span').textContent = e.chat.canal
-    ? (e.chat.conectado ? '#' + e.chat.canal + (e.chat.respondendoComo ? ' · respondendo' : '') : 'Conectando a #' + e.chat.canal + '...')
-    : 'Sem canal';
-  ch.dataset.dica = ch.querySelector('span').textContent;
+  desenharStatus(e);
   $('#abertos').checked = e.pedidosAbertos;
-  $('#abertosTxt').textContent = e.pedidosAbertos ? 'Pedidos abertos' : 'Pedidos fechados';
+  $('#abertosTxt').textContent = e.pedidosAbertos ? 'Pedidos Abertos' : 'Pedidos Fechados';
 
   // sincronização
   const okSp = conectado; const okCanal = !!c.canal_twitch; const okTw = !!e.chat.respondendoComo;
   const tudo = okSp && okCanal;
   $('#syncEstados').innerHTML = [
     [okSp, 'Spotify'], [okCanal, okCanal ? '#' + c.canal_twitch : 'Canal'], [okTw, 'Respondendo no chat'],
-  ].map(([ok, t], i) => `<span class="chip ${ok ? 'ok' : (i === 2 ? '' : 'nao')}">${ok ? ic('check', 'p') : ''}${esc(t)}</span>`).join('');
+  ].map(([ok, t], i) => `<span class="chip ${ok ? 'ok' : (i === 2 ? 'opc' : 'obrig')}">${ok ? ic('check', 'p') : ''}${esc(t)}</span>`).join('');
   $('#syncSelo').hidden = tudo;
   $('#sync').classList.toggle('destaque', !tudo);
   $('#bolSync').hidden = tudo;
   $('#passo1').classList.toggle('feito', okSp);
   $('#passo2').classList.toggle('feito', okCanal);
   $('#passo3').classList.toggle('feito', okTw);
-  $('#spChip').textContent = okSp ? 'feito' : 'obrigatório';
-  $('#canalChip').textContent = okCanal ? 'feito' : 'obrigatório';
-  $('#twChip').textContent = okTw ? 'feito' : '';
-  $('#twChip').hidden = !okTw;
-
-  const faltas = [];
-  if (!okSp) faltas.push('conectar o Spotify');
-  if (!okCanal) faltas.push('colocar o canal da Twitch');
-  let aviso = faltas.length ? 'Falta ' + faltas.join(' e ') + '.' : '';
-  if (conectado && e.spotify.premium === false) aviso = '⚠️ Essa conta do Spotify não é Premium. O Spotify só deixa adicionar na fila com Premium.';
-  $('#avisoConfig').hidden = !aviso;
-  $('#avisoTxt').textContent = aviso;
+  marcarPasso('#spChip', okSp, 'obrigatório', 'obrig');
+  marcarPasso('#canalChip', okCanal, 'obrigatório', 'obrig');
+  marcarPasso('#twChip', okTw, 'recomendado', 'opc');
 
   // player
   const t = e.tocandoAgora;
-  $('#tNome').textContent = t ? (t.nome || t.titulo) : (conectado ? 'Nada tocando' : 'Spotify não conectado');
-  $('#tArtista').textContent = t ? (t.artistas || '') : '';
+  $('#tNome').textContent = t ? (t.nome || t.titulo) : conectado ? 'Nada tocando' : 'Spotify não conectado';
+  $('#tExplicita').hidden = !(t && t.explicita);
+  $('#tArtista').textContent = t ? (t.artistas || '')
+    : !conectado ? 'Conecte o Spotify na aba Configuração.'
+    : e.spotify.aparelho ? 'Dê play no Spotify ou peça uma música no chat.' : 'Abra o Spotify e dê play em qualquer música pra ativar o player.';
   if (mudou('tChips', t)) $('#tChips').innerHTML = t ? chipsDe(t, true) : '';
   const capa = $('#capa');
   if (t && t.imagem) { capa.classList.remove('vazia'); capa.style.backgroundImage = `url("${t.imagem}")`; }
@@ -1086,8 +1361,11 @@ function desenhar() {
   $('#volumeBox').style.display = conectado && e.spotify.suportaVolume ? '' : 'none';
   if (Date.now() - mexendoVolume > 3000 && e.spotify.volume != null) $('#volume').value = e.spotify.volume;
   $('#votos').textContent = e.votos.precisa && e.votos.atual ? `${e.votos.atual}/${e.votos.precisa} votos para pular` : '';
-  $('#aparelho').textContent = conectado && !e.spotify.aparelho ? '⚠️ Abra o Spotify e dê play em qualquer música para ativar o player.' : '';
+  $('#aparelho').textContent = conectado && t && !e.spotify.aparelho ? '⚠️ Abra o Spotify e dê play para ativar o player.' : '';
   $('#earrapeInfo').textContent = e.earrapeAtivo ? '🔊 Earrape rolando!' : '';
+  $('.linha-info').hidden = !($('#votos').textContent || $('#aparelho').textContent || $('#earrapeInfo').textContent);
+  $('#tNome').title = $('#tNome').textContent;
+  $('#tArtista').title = $('#tArtista').textContent;
 
   // pendentes
   $('#cartaoPendentes').hidden = !e.pendentes.length;
@@ -1102,10 +1380,10 @@ function desenhar() {
   if (arrastandoId == null && mudou('fila', [e.pedidos, c.comandos.pedir[0]])) {
     $('#fila').innerHTML = e.pedidos.length
       ? e.pedidos.map((p, i) => itemFila(p, i, 'fila')).join('')
-      : `<li class="vazio" style="background:none;display:block">Nenhum pedido ainda.<br>O chat pede com <code>${esc(c.comandos.pedir[0])} música - artista</code></li>`;
+      : `<li class="vazio" style="background:none;display:block">Nenhum pedido na fila ainda.<br>Peça no chat com <code>${esc(c.comandos.pedir[0])} [música] - [artista]</code></li>`;
   }
 
-  // registro
+  // histórico e conexões
   const ult = e.logs.length ? e.logs[e.logs.length - 1] : null;
   const marca = e.logs.length + (ult ? ult.h + ult.t : '');
   if (marca !== ultimoLog) {
@@ -1113,12 +1391,10 @@ function desenhar() {
     const reg = $('#registro');
     const noFim = reg.scrollTop + reg.clientHeight >= reg.scrollHeight - 30;
     reg.innerHTML = e.logs.map((l) => `<span class="h">${esc(l.h)}</span>  ${esc(l.t)}`).join('\n');
-    if (noFim) reg.scrollTop = reg.scrollHeight;
+    if (noFim || primeiraVez) reg.scrollTop = reg.scrollHeight;
   }
 
-  // moderação
-  $('#descLimites').textContent = `${c.cooldown_segundos}s entre pedidos · ${c.max_pedidos_por_pessoa} por pessoa`;
-  $('#qtdBan').textContent = c.musicas_banidas.length ? `${c.musicas_banidas.length} música(s)` : 'nenhuma';
+  // limites, banidas
   if (mudou('banidas', c.musicas_banidas)) {
     $('#banidas').innerHTML = c.musicas_banidas.length
       ? c.musicas_banidas.map((m) => `<li><div class="info"><div class="t" title="${esc(m.titulo)}">${esc(m.titulo)}</div></div>
@@ -1126,7 +1402,7 @@ function desenhar() {
       : '<li class="vazio" style="background:none;display:block">Nenhuma música banida.</li>';
   }
 
-  // configurar
+  // configurações
   const spE = $('#spEstado');
   spE.className = 'estado-con' + (conectado ? ' ok' : '');
   spE.textContent = conectado ? '✅ Conectado como ' + e.spotify.usuario : (e.spotify.erro ? '⚠️ ' + e.spotify.erro : 'Não conectado');
@@ -1142,10 +1418,14 @@ function desenhar() {
   desenharOverlayLinks();
   desenharPontos(e);
   desenharAtualizacoes(e);
+  if (e.deck && mudou('deck', e.deck.comandos)) {
+    $('#listaDeck').innerHTML = e.deck.comandos.map((d) => `<li>${ic(d.icone)}<span>${esc(d.nome)}</span>
+      <button class="botao pequeno" type="button" data-deck="${esc(d.id)}" title="Testar este comando agora">Testar</button></li>`).join('');
+    $('#criarAtalhos').disabled = !e.deck.windows;
+  }
 
   const h = e.historico;
   const quando = h.desde ? new Date(h.desde).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '';
-  $('#descHist').textContent = h.quantidade ? `${h.quantidade} música(s)` : 'vazio';
   $('#histEstado').textContent = h.quantidade ? `${h.quantidade} música(s) tocaram desde ${quando}.` : 'Nenhuma música ainda.';
   $('#criarPlaylist').disabled = !h.quantidade || !conectado;
   $('#histDica').textContent = conectado && !e.podeCriarPlaylist
@@ -1190,21 +1470,99 @@ async function atualizar() {
     if (!d || !d.config) return;
     est = d;
     if (primeiraVez) {
-      primeiraVez = false;
       preencherForm(est.config);
       const incompleto = !est.spotify.conectado || !est.config.canal_twitch;
       $('#sync').open = incompleto;
       $('#spPassos').open = !est.config.spotify_client_id;
       $('#twPassos').open = false;
       const abaLink = location.hash.replace('#', '');
-      if (['player', 'moderacao', 'config', 'ajuda'].includes(abaLink)) irPara(abaLink);
+      if (ABAS.includes(abaLink) || ABAS_ANTIGAS[abaLink]) irPara(abaLink);
       else if (incompleto) irPara('config');
     }
     desenhar();
+    mostrarNovidades(est);
+    primeiraVez = false;
   } catch {
     // o aviso de "fora do ar" já aparece sozinho
   }
 }
+
+// ------------------------------------------------ janela de novidades (aparece uma vez por versão nova)
+let novidadesMostradas = false;
+function mostrarNovidades(e) {
+  const n = e.novidades;
+  if (novidadesMostradas || !n || !n.itens || !n.itens.length || e.config.ultima_versao_vista === n.versao) return;
+  novidadesMostradas = true;
+  $('#novTitulo').textContent = 'Novidades da versão v' + n.versao;
+  $('#novResumo').textContent = n.resumo || '';
+  $('#novLista').innerHTML = n.itens.map((x) => `<li>${ic('check', 'p')}<span>${esc(x)}</span></li>`).join('');
+  $('#novidades').hidden = false;
+  setTimeout(() => $('#novOk').focus(), 50);
+}
+function fecharNovidades() {
+  if ($('#novidades').hidden) return;
+  $('#novidades').hidden = true;
+  acao('novidades-vistas'); // guarda no config.json que essa versão já foi vista
+}
+$('#novOk').onclick = fecharNovidades;
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharNovidades(); });
+
+// ------------------------------------------------ partes que abrem e fecham (cada uma independente, com memória)
+(function lembrarPartes() {
+  let salvo = {};
+  try { salvo = JSON.parse(localStorage.getItem('sb-partes-v3') || '{}'); } catch { /* sem memória */ }
+  document.querySelectorAll('details.bloco').forEach((d, i) => {
+    const chave = d.id || ((d.closest('.aba') || {}).id + ':' + i);
+    if (chave in salvo) d.open = !!salvo[chave];
+    d.addEventListener('toggle', () => {
+      salvo[chave] = d.open;
+      try { localStorage.setItem('sb-partes-v3', JSON.stringify(salvo)); } catch { /* sem memória */ }
+      if (d.open) setTimeout(() => montarMinis($('#overlayDireita').checked), 0);
+    });
+  });
+})();
+
+// ------------------------------------------------ miniatura do overlay de verdade
+function montarMinis(direita) {
+  document.querySelectorAll('.mini[data-overlay]').forEach((mini) => {
+    if (!mini.offsetParent) return; // escondida (outra aba ou parte fechada)
+    const comFila = mini.dataset.overlay.includes('fila=1');
+    const largura = 500;
+    const altura = comFila ? 300 : 140;
+    const src = '/overlay?demo=1' + (comFila ? '&fila=1' : '') + (direita ? '&lado=direita' : '');
+    let f = mini.querySelector('iframe');
+    if (!f) { f = document.createElement('iframe'); f.setAttribute('tabindex', '-1'); f.setAttribute('aria-hidden', 'true'); mini.appendChild(f); }
+    if (f.dataset.src !== src) { f.dataset.src = src; f.src = src; }
+    const escala = (mini.clientWidth || 240) / largura;
+    f.style.width = largura + 'px';
+    f.style.height = altura + 'px';
+    f.style.transform = 'scale(' + escala + ')';
+    mini.style.height = Math.round(altura * escala) + 'px';
+  });
+}
+window.addEventListener('resize', () => montarMinis($('#overlayDireita').checked));
+
+// ------------------------------------------------ janela com tamanho fixo (900 x 650)
+// O Edge não deixa esconder o botão de maximizar. O que dá pra fazer: se alguém puxar a borda,
+// a janela volta sozinha pro tamanho certo. Maximizada, a tela se ajusta; clicando de novo, volta pros 900 x 650.
+(function travarJanela() {
+  const LARGURA = 900, ALTURA = 650;
+  let funciona = true;
+  let timer = null;
+  const maximizada = () => outerWidth >= screen.availWidth - 4 && outerHeight >= screen.availHeight - 4;
+  function ajustar() {
+    // minimizada: espera a janela voltar (senão a trava achava que não funciona e desligava)
+    if (!funciona || document.hidden || maximizada() || (outerWidth === LARGURA && outerHeight === ALTURA)) return;
+    const antes = outerWidth + 'x' + outerHeight;
+    try { window.resizeTo(LARGURA, ALTURA); } catch { funciona = false; return; }
+    // numa aba comum do navegador isso não faz nada: aí a gente para de tentar
+    setTimeout(() => { if (outerWidth + 'x' + outerHeight === antes) funciona = false; }, 800);
+  }
+  addEventListener('resize', () => { clearTimeout(timer); timer = setTimeout(ajustar, 200); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { clearTimeout(timer); timer = setTimeout(ajustar, 200); } });
+  ajustar();
+})();
+
 atualizar();
 const laco = setInterval(atualizar, 2000);
 setInterval(animarBarra, 1000);
